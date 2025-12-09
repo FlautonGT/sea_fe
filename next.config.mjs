@@ -1,0 +1,35 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "nos.jkt-1.neo.id",
+        pathname: "/gate/**",
+      },
+      {
+        protocol: "https",
+        hostname: "api.gate.co.id",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.gate.co.id",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "gate.nos.jkt-1.neo.id",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
+      },
+    ],
+  },
+};
+
+export default nextConfig;
+

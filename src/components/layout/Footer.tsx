@@ -51,10 +51,10 @@ export default function Footer() {
               <div className="pt-2">
                 <p className="font-medium text-gray-900 dark:text-white">Email</p>
                 <a
-                  href="mailto:support@gate.id"
+                  href="mailto:support@seaply.co"
                   className="text-primary-600 dark:text-primary-400 hover:underline"
                 >
-                  support@gate.id
+                  support@seaply.co
                 </a>
               </div>
               <div className="pt-2">

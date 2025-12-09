@@ -15,12 +15,12 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'Gate - Top Up Game & Pulsa',
-  description: 'Semua kebutuhan game & pulsa dalam satu aplikasi, dijamin cepat, mudah, aman.',
-  keywords: ['top up', 'game', 'pulsa', 'voucher', 'mobile legends', 'free fire', 'pubg'],
-  authors: [{ name: 'Gate' }],
+  title: 'Seaply - Top Up Game & Pulsa',
+  description: 'Platform top up game dan voucher digital terpercaya di Indonesia. Proses cepat, aman, dan tersedia 24/7.',
+  keywords: ['top up game', 'voucher game', 'mobile legends', 'free fire', 'pubg mobile'],
+  authors: [{ name: 'Seaply' }],
   creator: 'PT Gerbang Solusi Digital',
-  publisher: 'Gate',
+  publisher: 'Seaply',
   formatDetection: {
     telephone: false,
   },

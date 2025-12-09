@@ -24,7 +24,7 @@ import {
   Pagination,
 } from '@/types/admin';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_ENDPOINT || 'https://gateway.gate.co.id';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_ENDPOINT || 'https://gateway.seaply.co';
 const ADMIN_API_VERSION = '/admin/v2';
 const ADMIN_TOKEN_KEY = 'admin_token';
 const ADMIN_REFRESH_TOKEN_KEY = 'admin_refresh_token';

@@ -9,12 +9,12 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "api.gate.co.id",
+        hostname: "api.seaply.co",
         pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "cdn.gate.co.id",
+        hostname: "cdn.seaply.co",
         pathname: "/**",
       },
       {

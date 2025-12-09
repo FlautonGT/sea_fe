@@ -6,8 +6,8 @@ import { AdminAuthProvider } from '@/contexts/AdminAuthContext';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Gate Admin Panel',
-  description: 'Gate.co.id Admin Panel - Kelola transaksi, produk, dan pengguna',
+  title: 'Seaply Admin Panel',
+  description: 'Seaply.co Admin Panel - Kelola transaksi, produk, dan pengguna',
 };
 
 export default function AdminRootLayout({

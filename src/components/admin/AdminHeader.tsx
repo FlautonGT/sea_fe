@@ -65,7 +65,7 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
         </button>
 
         <h1 className="text-lg font-semibold text-gray-900 hidden sm:block">
-          Gate Admin Panel
+          Seaply Admin Panel
         </h1>
       </div>
 

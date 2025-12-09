@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 export default function AdminLoginPage() {
   const { login, verifyMFA, isLoading, mfaRequired } = useAdminAuth();
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mfaCode, setMfaCode] = useState('');
@@ -52,11 +52,11 @@ export default function AdminLoginPage() {
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-2xl mb-4">
-            <img src="/logo.svg" alt="Gate" className="h-10 w-auto" />
+            <img src="/logo.svg" alt="Seaply" className="h-10 w-auto" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Gate Admin Panel</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Seaply Admin Panel</h1>
           <p className="text-gray-500 mt-2">
-            {mfaRequired 
+            {mfaRequired
               ? 'Masukkan kode verifikasi 2FA'
               : 'Masuk ke akun admin Anda'
             }
@@ -136,7 +136,7 @@ export default function AdminLoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="admin@gate.co.id"
+                    placeholder="admin@seaply.co"
                     autoComplete="email"
                   />
                 </div>
@@ -197,7 +197,7 @@ export default function AdminLoginPage() {
 
         {/* Footer */}
         <p className="text-center text-sm text-gray-500 mt-8">
-          © {new Date().getFullYear()} Gate.co.id - All rights reserved
+          © {new Date().getFullYear()} Seaply.co - All rights reserved
         </p>
       </div>
     </div>

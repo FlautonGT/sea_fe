@@ -1,8 +1,14 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Gate - Top Up Game & Pulsa',
-  description: 'Semua kebutuhan game & pulsa dalam satu aplikasi, dijamin cepat, mudah, aman.',
+  title: 'Seaply - Top Up Game & Pulsa',
+  description: 'Platform top up game dan voucher digital terpercaya di Indonesia. Proses cepat, aman, dan tersedia 24/7.',
+  icons: {
+    icon: '/favicon.ico',
+  },
+  authors: [{ name: 'Seaply' }],
+  keywords: ['top up game', 'voucher game', 'mobile legends', 'free fire', 'pubg mobile'],
+  publisher: 'Seaply',
 };
 
 export default function RootLayout({

@@ -35,8 +35,8 @@ import {
 // API Configuration
 // Set NEXT_PUBLIC_API_ENDPOINT in .env file
 // Development: http://localhost:8080
-// Production: https://gateway.gate.co.id
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_ENDPOINT || 'https://gateway.gate.co.id';
+// Production: https://gateway.seaply.co
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_ENDPOINT || 'https://gateway.seaply.co';
 const API_VERSION = '/v2';
 
 interface FetchOptions extends RequestInit {

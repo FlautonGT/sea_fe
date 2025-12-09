@@ -201,7 +201,7 @@ export default function AdminFormModal({
             type="email"
             value={form.email}
             onChange={(e) => handleChange('email', e.target.value)}
-            placeholder="admin@gate.co.id"
+            placeholder="admin@seaply.co"
             required
             disabled={!!initialData}
             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"

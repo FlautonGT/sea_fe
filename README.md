@@ -1,6 +1,6 @@
 # Gate Frontend
 
-A modern Next.js frontend for Gate.co.id - Indonesia's leading game and digital voucher top-up platform.
+A modern Next.js frontend for Seaply.co - Indonesia's leading game and digital voucher top-up platform.
 
 ## Features
 
@@ -142,7 +142,7 @@ NEXT_PUBLIC_API_ENDPOINT=http://localhost:8080
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `NEXT_PUBLIC_API_ENDPOINT` | API base URL | `https://gateway.gate.co.id` |
+| `NEXT_PUBLIC_API_ENDPOINT` | API base URL | `https://gateway.seaply.co` |
 
 ### Auto Geo-Detection
 
@@ -229,6 +229,6 @@ All rights reserved © 2025 PT Gerbang Solusi Digital
 ## Support
 
 For support, contact:
-- Email: support@gate.co.id
+- Email: support@seaply.co
 - WhatsApp: Check the website footer
 

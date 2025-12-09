@@ -178,7 +178,7 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         {/* Logo */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
           <Link href="/panel-admin" className="flex items-center gap-2">
-            <img src="/logo.svg" alt="Gate" className="h-8 w-auto" />
+            <img src="/logo.svg" alt="Seaply" className="h-8 w-auto" />
             <span className="font-semibold text-gray-900">Admin</span>
           </Link>
           <button
@@ -192,7 +192,7 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {filteredNavItems.map((item) => {
-            const isActive = pathname === item.href || 
+            const isActive = pathname === item.href ||
               (item.href !== '/panel-admin' && pathname.startsWith(item.href));
             const Icon = item.icon;
 

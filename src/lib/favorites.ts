@@ -1,5 +1,5 @@
 // Local Storage key for favorites
-const FAVORITES_KEY = 'gate_favorites';
+const FAVORITES_KEY = 'sea_favorites';
 
 // Get favorites from localStorage
 export function getFavorites(): { code: string; timestamp: number }[] {

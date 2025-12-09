@@ -25,7 +25,7 @@ export default function ProductsPage() {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
@@ -168,7 +168,7 @@ export default function ProductsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Produk</h1>
-          <p className="text-gray-500 mt-1">Kelola semua produk Gate</p>
+          <p className="text-gray-500 mt-1">Kelola semua produk Seaply</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -260,12 +260,12 @@ export default function ProductsPage() {
         pagination={
           pagination
             ? {
-                page: pagination.page,
-                totalPages: pagination.totalPages,
-                totalRows: pagination.totalRows,
-                limit: pagination.limit,
-                onPageChange: setPage,
-              }
+              page: pagination.page,
+              totalPages: pagination.totalPages,
+              totalRows: pagination.totalRows,
+              limit: pagination.limit,
+              onPageChange: setPage,
+            }
             : undefined
         }
       />

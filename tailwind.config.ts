@@ -22,7 +22,7 @@ const config: Config = {
           800: "#1E429F",
           900: "#233876",
         },
-        gate: {
+        sea: {
           blue: "#1565C0",
           "blue-dark": "#0D47A1",
           "blue-light": "#42A5F5",

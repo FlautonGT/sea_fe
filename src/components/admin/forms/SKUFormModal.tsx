@@ -76,7 +76,7 @@ export default function SKUFormModal({
   const [pricingRows, setPricingRows] = useState<PricingRow[]>([emptyPricingRow]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   // Dropdown data
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [providers, setProviders] = useState<any[]>([]);
@@ -84,7 +84,7 @@ export default function SKUFormModal({
   const [images, setImages] = useState<string[]>([]);
   const [regions, setRegions] = useState<AdminRegion[]>([]);
   const [loadingData, setLoadingData] = useState(false);
-  
+
   // Image upload
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -179,7 +179,7 @@ export default function SKUFormModal({
           })) || [];
 
         setPricingRows(rows.length ? rows : [emptyPricingRow]);
-        
+
         // Set image preview from existing data
         if (initialData.image) {
           setImagePreview(initialData.image);
@@ -344,9 +344,9 @@ export default function SKUFormModal({
         info: form.info.trim() || undefined,
         badge: form.badgeText
           ? {
-              text: form.badgeText,
-              color: form.badgeColor || '#4F46E5',
-            }
+            text: form.badgeText,
+            color: form.badgeColor || '#4F46E5',
+          }
           : undefined,
       };
 
@@ -384,7 +384,7 @@ export default function SKUFormModal({
       open={open}
       onClose={loading ? () => null : onClose}
       title={initialData ? 'Edit SKU' : 'Tambah SKU'}
-      description="Sesuaikan data SKU Gate"
+      description="Sesuaikan data SKU Seaply"
       maxWidthClass="max-w-3xl"
       footer={
         <div className="flex items-center justify-end gap-3">
@@ -522,28 +522,26 @@ export default function SKUFormModal({
           <p className="text-xs text-gray-500 mb-2">
             Upload gambar baru atau pilih dari gambar yang sudah ada
           </p>
-          
+
           {/* Mode Toggle */}
           <div className="flex gap-2 mb-3">
             <button
               type="button"
               onClick={() => setImageMode('upload')}
-              className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-                imageMode === 'upload'
+              className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${imageMode === 'upload'
                   ? 'bg-primary text-white border-primary'
                   : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-              }`}
+                }`}
             >
               Upload Baru
             </button>
             <button
               type="button"
               onClick={() => setImageMode('select')}
-              className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-                imageMode === 'select'
+              className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${imageMode === 'select'
                   ? 'bg-primary text-white border-primary'
                   : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-              }`}
+                }`}
             >
               Pilih dari yang Ada
             </button>

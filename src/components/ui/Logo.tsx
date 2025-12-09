@@ -11,9 +11,9 @@ interface LogoProps {
   alt?: string;
 }
 
-export default function Logo({ className, width, height, alt = 'Gate' }: LogoProps) {
+export default function Logo({ className, width, height, alt = 'Seaply' }: LogoProps) {
   const { theme } = useTheme();
-  
+
   // Use dark logo when theme is dark
   const logoSrc = theme === 'dark' ? '/logo_dark.svg' : '/logo.svg';
 

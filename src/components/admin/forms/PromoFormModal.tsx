@@ -92,7 +92,7 @@ export default function PromoFormModal({
   const [form, setForm] = useState<PromoFormState>(defaultPromoState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   // Dropdown data
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [paymentChannels, setPaymentChannels] = useState<AdminPaymentChannel[]>([]);
@@ -119,7 +119,7 @@ export default function PromoFormModal({
               return [];
             }),
           ]);
-          
+
           // Handle products response
           let productsArray: AdminProduct[] = [];
           if (productsRes && typeof productsRes === 'object' && 'products' in productsRes) {
@@ -129,15 +129,15 @@ export default function PromoFormModal({
           }
           console.log('Products loaded:', productsArray.length);
           setProducts(productsArray);
-          
+
           // Handle payment channels response
           const channelsArray = Array.isArray(paymentChannelsRes) ? paymentChannelsRes : [];
           console.log('Payment channels loaded:', channelsArray.length);
           setPaymentChannels(channelsArray);
-          
+
           // Handle regions response
-          const regionsArray = Array.isArray(regionsRes) 
-            ? regionsRes.filter(r => r && r.isActive) 
+          const regionsArray = Array.isArray(regionsRes)
+            ? regionsRes.filter(r => r && r.isActive)
             : [];
           console.log('Regions loaded:', regionsArray.length);
           setRegions(regionsArray);
@@ -294,7 +294,7 @@ export default function PromoFormModal({
       open={open}
       onClose={loading ? () => null : onClose}
       title={initialData ? 'Edit Promo' : 'Tambah Promo'}
-      description="Kelola kode promo Gate"
+      description="Kelola kode promo Seaply"
       footer={
         <div className="flex items-center justify-end gap-3">
           <button

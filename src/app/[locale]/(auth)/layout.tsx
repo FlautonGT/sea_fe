@@ -31,7 +31,7 @@ export default function AuthLayout({
           <Link href={getLocalizedPath('/')}>
             <Image
               src="/logo.svg"
-              alt="Gate"
+              alt="Seaply"
               width={150}
               height={50}
               className="h-12 w-auto brightness-0 invert"

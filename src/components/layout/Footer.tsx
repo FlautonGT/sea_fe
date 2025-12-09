@@ -7,10 +7,10 @@ import { useLocale, useTranslation } from '@/contexts/LocaleContext';
 import Logo from '@/components/ui/Logo';
 
 const socialLinks = [
-  { icon: Youtube, href: 'https://youtube.com/@gateofficial', label: 'YouTube' },
-  { icon: Instagram, href: 'https://instagram.com/gate.official', label: 'Instagram' },
+  { icon: Youtube, href: 'https://youtube.com/@seaplyofficial', label: 'YouTube' },
+  { icon: Instagram, href: 'https://instagram.com/seaply.official', label: 'Instagram' },
   { icon: Phone, href: 'https://wa.me/6281234567890', label: 'WhatsApp' },
-  { icon: Twitter, href: 'https://x.com/gate_official', label: 'X' },
+  { icon: Twitter, href: 'https://x.com/seaply_official', label: 'X' },
 ];
 
 export default function Footer() {

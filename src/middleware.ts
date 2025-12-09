@@ -15,16 +15,16 @@ const PUBLIC_FILES = [
 const COUNTRY_TO_REGION: Record<string, SupportedRegion> = {
   // Indonesia
   'ID': 'id',
-  
+
   // Malaysia
   'MY': 'my',
-  
+
   // Singapore
   'SG': 'sg',
-  
+
   // Philippines
   'PH': 'ph',
-  
+
   // Thailand
   'TH': 'th',
 };
@@ -47,9 +47,9 @@ function detectCountry(request: NextRequest): string | null {
   }
 
   // 3. Some other CDNs/proxies use these headers
-  const geoCountry = request.headers.get('x-geo-country') || 
-                     request.headers.get('x-country-code') ||
-                     request.headers.get('geoip-country-code');
+  const geoCountry = request.headers.get('x-geo-country') ||
+    request.headers.get('x-country-code') ||
+    request.headers.get('geoip-country-code');
   if (geoCountry) {
     return geoCountry.toUpperCase();
   }
@@ -125,14 +125,14 @@ export function middleware(request: NextRequest) {
   }
 
   // No valid locale in URL, need to detect and redirect
-  
+
   // Check for test country parameter (for development/testing)
   const url = new URL(request.url);
   const testCountry = url.searchParams.get('_country');
-  
+
   // 1. First, check if user has a saved preference in cookie (skip if testing)
   if (!testCountry) {
-    const cookieLocale = request.cookies.get('GATE_LOCALE')?.value;
+    const cookieLocale = request.cookies.get('SEA_LOCALE')?.value;
     if (cookieLocale && isValidLocale(cookieLocale)) {
       // Use saved preference
       const newUrl = new URL(`/${cookieLocale}${pathname}`, request.url);
@@ -143,10 +143,10 @@ export function middleware(request: NextRequest) {
 
   // 2. Detect country from headers
   const detectedCountry = detectCountry(request);
-  
+
   // 3. Detect preferred language
   const detectedLanguage = detectLanguage(request, detectedCountry);
-  
+
   // 4. Get locale based on detected country and language
   const targetLocale = getLocaleFromCountry(detectedCountry, detectedLanguage);
 
@@ -156,15 +156,15 @@ export function middleware(request: NextRequest) {
   // Redirect to localized URL
   const newUrl = new URL(`/${targetLocale}${pathname}`, request.url);
   newUrl.search = request.nextUrl.search;
-  
+
   // Set cookie to remember the auto-detected locale
   const response = NextResponse.redirect(newUrl);
-  response.cookies.set('GATE_LOCALE', targetLocale, {
+  response.cookies.set('SEA_LOCALE', targetLocale, {
     path: '/',
     maxAge: 60 * 60 * 24 * 365, // 1 year
     sameSite: 'lax',
   });
-  
+
   return response;
 }
 

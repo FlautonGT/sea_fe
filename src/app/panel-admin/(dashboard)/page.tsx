@@ -82,7 +82,7 @@ export default function AdminDashboardPage() {
             {getGreeting()}, {admin?.name?.split(' ')[0]}! 👋
           </h1>
           <p className="text-gray-500 mt-1">
-            Berikut ringkasan aktivitas Gate hari ini
+            Berikut ringkasan aktivitas Seaply hari ini
           </p>
         </div>
         <button
@@ -288,7 +288,7 @@ export default function AdminDashboardPage() {
                       className={cn(
                         'h-full rounded-full transition-all',
                         provider.successRate >= 98 ? 'bg-green-500' :
-                        provider.successRate >= 95 ? 'bg-yellow-500' : 'bg-red-500'
+                          provider.successRate >= 95 ? 'bg-yellow-500' : 'bg-red-500'
                       )}
                       style={{ width: `${provider.successRate}%` }}
                     />

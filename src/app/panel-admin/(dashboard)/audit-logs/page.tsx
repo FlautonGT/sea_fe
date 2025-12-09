@@ -26,10 +26,10 @@ export default function AuditLogsPage() {
       setPagination(data.pagination);
     } catch (err) {
       setLogs([
-        { id: 'log_1', admin: { id: 'adm_1', name: 'John Superadmin', email: 'superadmin@gate.co.id' }, action: 'UPDATE', resource: 'SKU', resourceId: 'sku_1', description: 'Updated SKU MLBB_86 price from 24000 to 24750', changes: { before: { sellPrice: 24000 }, after: { sellPrice: 24750 } }, ipAddress: '103.xxx.xxx.xxx', createdAt: '2025-12-03T12:00:00+07:00' },
-        { id: 'log_2', admin: { id: 'adm_2', name: 'Jane Admin', email: 'admin@gate.co.id' }, action: 'CREATE', resource: 'PROMO', resourceId: 'prm_1', description: 'Created new promo NEWYEAR2026', ipAddress: '103.xxx.xxx.xxx', createdAt: '2025-12-03T11:30:00+07:00' },
-        { id: 'log_3', admin: { id: 'adm_1', name: 'John Superadmin', email: 'superadmin@gate.co.id' }, action: 'DELETE', resource: 'BANNER', resourceId: 'ban_5', description: 'Deleted banner "Old Promo"', ipAddress: '103.xxx.xxx.xxx', createdAt: '2025-12-03T10:00:00+07:00' },
-        { id: 'log_4', admin: { id: 'adm_2', name: 'Jane Admin', email: 'admin@gate.co.id' }, action: 'UPDATE', resource: 'PRODUCT', resourceId: 'prd_1', description: 'Updated product MLBB isPopular to true', ipAddress: '103.xxx.xxx.xxx', createdAt: '2025-12-03T09:30:00+07:00' },
+        { id: 'log_1', admin: { id: 'adm_1', name: 'John Superadmin', email: 'superadmin@seaply.co' }, action: 'UPDATE', resource: 'SKU', resourceId: 'sku_1', description: 'Updated SKU MLBB_86 price from 24000 to 24750', changes: { before: { sellPrice: 24000 }, after: { sellPrice: 24750 } }, ipAddress: '103.xxx.xxx.xxx', createdAt: '2025-12-03T12:00:00+07:00' },
+        { id: 'log_2', admin: { id: 'adm_2', name: 'Jane Admin', email: 'admin@seaply.co' }, action: 'CREATE', resource: 'PROMO', resourceId: 'prm_1', description: 'Created new promo NEWYEAR2026', ipAddress: '103.xxx.xxx.xxx', createdAt: '2025-12-03T11:30:00+07:00' },
+        { id: 'log_3', admin: { id: 'adm_1', name: 'John Superadmin', email: 'superadmin@seaply.co' }, action: 'DELETE', resource: 'BANNER', resourceId: 'ban_5', description: 'Deleted banner "Old Promo"', ipAddress: '103.xxx.xxx.xxx', createdAt: '2025-12-03T10:00:00+07:00' },
+        { id: 'log_4', admin: { id: 'adm_2', name: 'Jane Admin', email: 'admin@seaply.co' }, action: 'UPDATE', resource: 'PRODUCT', resourceId: 'prd_1', description: 'Updated product MLBB isPopular to true', ipAddress: '103.xxx.xxx.xxx', createdAt: '2025-12-03T09:30:00+07:00' },
       ]);
       setPagination({ limit: 10, page: 1, totalRows: 5000, totalPages: 500 });
     } finally {

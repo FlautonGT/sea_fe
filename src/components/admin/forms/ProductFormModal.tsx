@@ -280,7 +280,7 @@ export default function ProductFormModal({
       open={open}
       onClose={loading ? () => null : onClose}
       title={initialData ? 'Edit Produk' : 'Tambah Produk'}
-      description="Lengkapi detail produk Gate"
+      description="Lengkapi detail produk Seaply"
       footer={
         <div className="flex items-center justify-end gap-3">
           <button

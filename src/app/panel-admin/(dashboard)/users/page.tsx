@@ -40,7 +40,7 @@ export default function UsersPage() {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // Filters
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -51,7 +51,7 @@ export default function UsersPage() {
     try {
       setLoading(true);
       setError('');
-      
+
       const data = await getUsers({
         limit: 10,
         page,
@@ -59,7 +59,7 @@ export default function UsersPage() {
         status: status || undefined,
         membership: membership || undefined,
       });
-      
+
       setUsers(data.users);
       setPagination(data.pagination);
     } catch (err: any) {
@@ -146,7 +146,7 @@ export default function UsersPage() {
       header: 'Login Terakhir',
       render: (item: AdminUser) => (
         <p className="text-sm text-gray-500">
-          {item.lastLoginAt 
+          {item.lastLoginAt
             ? format(new Date(item.lastLoginAt), 'dd MMM yyyy, HH:mm', { locale: id })
             : '-'
           }
@@ -175,7 +175,7 @@ export default function UsersPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Pengguna</h1>
-          <p className="text-gray-500 mt-1">Kelola semua pengguna Gate</p>
+          <p className="text-gray-500 mt-1">Kelola semua pengguna Seaply</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -283,12 +283,12 @@ export default function UsersPage() {
         pagination={
           pagination
             ? {
-                page: pagination.page,
-                totalPages: pagination.totalPages,
-                totalRows: pagination.totalRows,
-                limit: pagination.limit,
-                onPageChange: setPage,
-              }
+              page: pagination.page,
+              totalPages: pagination.totalPages,
+              totalRows: pagination.totalRows,
+              limit: pagination.limit,
+              onPageChange: setPage,
+            }
             : undefined
         }
       />

@@ -60,7 +60,7 @@ export function LocaleProvider({
   const locale: Locale = { region, language };
   const localeString = createLocaleString(locale);
   const regionCode = getRegionCode(region);
-  
+
   // Fetch region and language data from API for flag URLs
   const [regions, setRegions] = useState<Region[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -104,7 +104,7 @@ export function LocaleProvider({
 
   // Set locale cookie when locale changes
   useEffect(() => {
-    document.cookie = `GATE_LOCALE=${localeString};path=/;max-age=31536000;SameSite=Lax`;
+    document.cookie = `SEA_LOCALE=${localeString};path=/;max-age=31536000;SameSite=Lax`;
   }, [localeString]);
 
   // Get path without locale prefix
@@ -136,10 +136,10 @@ export function LocaleProvider({
       const targetRegion = newRegion || region;
       const targetLanguage = newLanguage || language;
       const newLocaleString = `${targetRegion}-${targetLanguage}`;
-      
+
       // Get current path without locale
       const currentPathWithoutLocale = getPathWithoutLocale(pathname);
-      
+
       // Navigate to new locale
       router.push(`/${newLocaleString}${currentPathWithoutLocale}`);
     },
@@ -210,7 +210,7 @@ export function useLocale() {
 // Custom hook for translations
 export function useTranslation() {
   const { language } = useLocale();
-  
+
   const t = useCallback(
     (key: string): string => {
       // Import translations synchronously (they're already bundled)

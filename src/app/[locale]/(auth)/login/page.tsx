@@ -175,79 +175,79 @@ export default function LoginPage() {
   return (
     <div>
       {/* Logo for desktop */}
-      <div className="hidden lg:flex justify-center mb-8">
-        <Link href={getLocalizedPath('/')}>
-          <Logo className="h-10 w-auto" />
-        </Link>
-      </div>
+      {/* Logo handled by Layout */}
+      <div className="h-8 lg:hidden" /> {/* Spacer for mobile header */}
 
-      <div className="text-center mb-8">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          {t('loginSubtitle')}
-        </p>
-      </div>
-
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 tracking-tight">
         {t('loginTitle')}
       </h1>
 
       {apiError && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
-          <p className="text-sm text-red-600 dark:text-red-400">{apiError}</p>
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3">
+          <div className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5">⚠️</div>
+          <p className="text-sm text-red-600 dark:text-red-400 font-medium">{apiError}</p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <Input
-          label={t('email')}
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          placeholder={t('emailPlaceholder')}
-          error={errors.email}
-          autoComplete="email"
-        />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-4">
+          <Input
+            label={t('email')}
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder={t('emailPlaceholder')}
+            error={errors.email}
+            autoComplete="email"
+            required
+          />
 
-        <Input
-          label={t('password')}
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          placeholder={t('passwordPlaceholder')}
-          error={errors.password}
-          autoComplete="current-password"
-        />
+          <div className="space-y-1">
+            <Input
+              label={t('password')}
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder={t('passwordPlaceholder')}
+              error={errors.password}
+              autoComplete="current-password"
+              required
+            />
+            <div className="flex justify-end pt-1">
+              <Link
+                href={getLocalizedPath('/forgot-password')}
+                className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+              >
+                {t('forgotPassword')}
+              </Link>
+            </div>
+          </div>
+        </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
           <Checkbox
             name="rememberMe"
             checked={formData.rememberMe}
             onChange={handleChange}
             label={t('rememberMe')}
           />
-          <Link
-            href={getLocalizedPath('/forgot-password')}
-            className="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
-          >
-            {t('forgotPassword')}
-          </Link>
         </div>
 
-        <Button type="submit" fullWidth isLoading={isLoading}>
+        <Button type="submit" fullWidth isLoading={isLoading} className="h-12 text-base font-semibold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all">
           {t('login')}
         </Button>
       </form>
 
       {/* Divider */}
-      <div className="relative my-6">
+      <div className="relative my-8">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+          <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
         </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">
-            {language === 'id' ? 'atau' : 'or'}
+        <div className="relative flex justify-center text-xs uppercase tracking-wider">
+          <span className="px-4 bg-white dark:bg-gray-900 text-gray-400 dark:text-gray-500 font-medium">
+            {language === 'id' ? 'atau lanjutkan dengan' : 'or continue with'}
           </span>
         </div>
       </div>

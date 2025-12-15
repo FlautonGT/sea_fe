@@ -131,6 +131,11 @@ export interface AdminTransaction {
     name: string;
     refId?: string;
     serialNumber?: string;
+    logs?: {
+      type: string;
+      data: any;
+      timestamp: string;
+    }[];
   };
   account: {
     nickname?: string;
@@ -156,6 +161,11 @@ export interface AdminTransaction {
     gateway: string;
     gatewayRefId?: string;
     paidAt?: string;
+    logs?: {
+      type: string;
+      data: any;
+      timestamp: string;
+    }[];
   };
   promo?: {
     code: string;
@@ -166,6 +176,16 @@ export interface AdminTransaction {
   userAgent?: string;
   createdAt: string;
   completedAt?: string;
+  timeline?: {
+    status: string;
+    message: string;
+    timestamp: string;
+  }[];
+  logs?: {
+    type: string;
+    data: any;
+    timestamp: string;
+  }[];
 }
 
 export interface AdminUser {

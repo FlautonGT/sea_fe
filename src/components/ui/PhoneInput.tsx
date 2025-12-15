@@ -91,7 +91,7 @@ function formatPhoneDisplay(phone: string, regionCode: string): string {
   const digits = phone.replace(/\D/g, '');
   const rule = PHONE_RULES[regionCode];
   if (!rule) return digits;
-  
+
   return rule.format(digits);
 }
 
@@ -103,20 +103,20 @@ function getPhonePlaceholder(regionCode: string): string {
 // Strip country code or leading 0 from phone number
 function cleanPhoneInput(input: string, regionCode: string): string {
   let cleaned = input.replace(/\D/g, ''); // Remove all non-digits
-  
+
   // Remove country code if user typed it
   const phoneCode = REGION_PHONE_CODE[regionCode]?.replace('+', '') || '';
   if (cleaned.startsWith(phoneCode)) {
     cleaned = cleaned.slice(phoneCode.length);
   }
-  
+
   // Remove leading 0 (national prefix) for countries that use it
   // Indonesia, Malaysia, Filipina, Thailand use 0 as national prefix
   // Singapore does NOT use 0
   if (regionCode !== 'SG' && cleaned.startsWith('0')) {
     cleaned = cleaned.slice(1);
   }
-  
+
   return cleaned;
 }
 
@@ -124,7 +124,7 @@ function cleanPhoneInput(input: string, regionCode: string): string {
 function validatePhoneLength(digits: string, regionCode: string): boolean {
   const rule = PHONE_RULES[regionCode];
   if (!rule) return true;
-  
+
   return digits.length >= rule.min && digits.length <= rule.max;
 }
 
@@ -174,7 +174,7 @@ export default function PhoneInput({
       // Check if value starts with any phone code
       let foundRegion = '';
       let number = value;
-      
+
       for (const [regionCode, phoneCode] of Object.entries(REGION_PHONE_CODE)) {
         if (value.startsWith(phoneCode)) {
           foundRegion = regionCode;
@@ -182,15 +182,15 @@ export default function PhoneInput({
           break;
         }
       }
-      
+
       // Update region if found
       if (foundRegion) {
         setSelectedRegion(foundRegion);
       }
-      
+
       // Clean the number: remove leading 0 and any country code
       const cleanNumber = cleanPhoneInput(number, foundRegion || selectedRegion);
-      
+
       // Set phone number (clean, no dashes)
       // Display number will be formatted by useEffect
       setPhoneNumber(cleanNumber);
@@ -234,10 +234,10 @@ export default function PhoneInput({
   // Update parent value when phone number or region changes
   useEffect(() => {
     if (!isInitialized.current) return; // Skip if not initialized yet
-    
+
     const phoneCode = REGION_PHONE_CODE[selectedRegion] || defaultCountryCode;
     const fullPhoneNumber = phoneNumber ? `${phoneCode}${phoneNumber}` : '';
-    
+
     // Only call onChange if the value actually changed (to avoid loops)
     if (fullPhoneNumber !== value) {
       onChange(fullPhoneNumber);
@@ -246,19 +246,19 @@ export default function PhoneInput({
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
-    
+
     // Clean input: remove country code, leading 0, and non-digits
     let cleanNumber = cleanPhoneInput(inputValue, selectedRegion);
-    
+
     // Get max length for current region
     const rule = PHONE_RULES[selectedRegion];
     const maxLength = rule?.max || 13;
-    
+
     // Limit to max length
     if (cleanNumber.length > maxLength) {
       cleanNumber = cleanNumber.slice(0, maxLength);
     }
-    
+
     // Store clean number (no dashes) - displayNumber will be updated by useEffect
     setPhoneNumber(cleanNumber);
     isInitialized.current = true; // Mark as initialized when user types
@@ -274,26 +274,29 @@ export default function PhoneInput({
   const phoneCode = REGION_PHONE_CODE[selectedRegion] || defaultCountryCode;
   const selectedRegionDisplay = selectedRegionData
     ? {
-        code: phoneCode,
-        flag: selectedRegionData.image || '',
-        country: selectedRegionData.country,
-      }
+      code: phoneCode,
+      flag: selectedRegionData.image || '',
+      country: selectedRegionData.country,
+    }
     : {
-        code: defaultCountryCode,
-        flag: '',
-        country: 'Indonesia',
-      };
+      code: defaultCountryCode,
+      flag: '',
+      country: 'Indonesia',
+    };
 
   return (
-    <div className="w-full relative">
+    <div className="w-full space-y-2">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-semibold text-gray-800 dark:text-gray-200">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
-      <div className="relative" ref={dropdownRef}>
-        <div className="flex rounded-lg border border-gray-300 dark:border-gray-600 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary">
+      <div className="relative group" ref={dropdownRef}>
+        <div className={`flex rounded-xl bg-gray-50 dark:bg-gray-800/50 border transition-all duration-300 ${error
+            ? 'border-red-500 focus-within:ring-red-100 dark:focus-within:ring-red-900/30 focus-within:border-red-500'
+            : 'border-gray-200 dark:border-gray-700 focus-within:ring-4 focus-within:ring-primary-100 dark:focus-within:ring-primary-900/30 focus-within:border-primary-500'
+          }`}>
           {/* Country Code Selector */}
           <div className="relative">
             <button
@@ -303,7 +306,7 @@ export default function PhoneInput({
                 e.stopPropagation();
                 setIsDropdownOpen((prev) => !prev);
               }}
-              className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border-r border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-l-lg cursor-pointer"
+              className="flex items-center gap-2 pl-4 pr-3 py-3.5 bg-transparent border-r border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors rounded-l-xl cursor-pointer h-full"
             >
               {selectedRegionDisplay.flag && (
                 <div className="relative w-6 h-4 flex-shrink-0">
@@ -328,23 +331,14 @@ export default function PhoneInput({
             value={displayNumber}
             onChange={handlePhoneNumberChange}
             placeholder={phonePlaceholder}
-            className={`flex-1 px-4 py-2.5 bg-transparent outline-none text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 rounded-r-lg ${
-              error ? 'border-red-500 focus:ring-red-500' : ''
-            }`}
+            className="flex-1 px-4 py-3.5 bg-transparent outline-none text-gray-900 dark:text-white placeholder-gray-400 rounded-r-xl"
           />
         </div>
 
         {/* Dropdown - positioned outside the input container */}
         {isDropdownOpen && (
-          <div 
-            className="absolute top-full left-0 z-[9999] mt-1 w-64 bg-white dark:bg-gray-800 border-2 border-blue-500 dark:border-blue-400 rounded-lg shadow-xl max-h-64 overflow-y-auto"
-            style={{ 
-              zIndex: 9999,
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              marginTop: '0.25rem'
-            }}
+          <div
+            className="absolute top-full left-0 z-[50] mt-2 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-64 overflow-y-auto animate-in fade-in zoom-in-95 duration-200"
           >
             {regions.length === 0 ? (
               <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 text-center">
@@ -364,11 +358,10 @@ export default function PhoneInput({
                         e.stopPropagation();
                         handleRegionSelect(region.code);
                       }}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                        selectedRegion === region.code
-                          ? 'bg-primary/10 dark:bg-primary/20'
+                      className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b last:border-0 border-gray-50 dark:border-gray-700/50 ${selectedRegion === region.code
+                          ? 'bg-blue-50 dark:bg-blue-900/20'
                           : ''
-                      }`}
+                        }`}
                     >
                       {region.image && (
                         <div className="relative w-6 h-4 flex-shrink-0">
@@ -381,11 +374,11 @@ export default function PhoneInput({
                         </div>
                       )}
                       <div className="flex-1 text-left">
-                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {region.country}
                         </div>
                       </div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                      <span className="text-sm text-gray-500 dark:text-gray-400 font-mono">
                         {code}
                       </span>
                     </button>
@@ -396,7 +389,7 @@ export default function PhoneInput({
         )}
       </div>
       {error && (
-        <p className="mt-1.5 text-xs text-red-500">{error}</p>
+        <p className="text-xs text-red-600 dark:text-red-400 font-medium animate-in slide-in-from-top-1 px-1">{error}</p>
       )}
     </div>
   );

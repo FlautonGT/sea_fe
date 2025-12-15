@@ -18,16 +18,16 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const isPassword = type === 'password';
 
     return (
-      <div className="w-full">
+      <div className="w-full space-y-2">
         {label && (
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-semibold text-gray-800 dark:text-gray-200">
             {label}
             {props.required && <span className="text-red-500 ml-1">*</span>}
           </label>
         )}
-        <div className="relative">
+        <div className="relative group">
           {leftIcon && (
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-600 transition-colors">
               {leftIcon}
             </div>
           )}
@@ -35,10 +35,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             type={isPassword && showPassword ? 'text' : type}
             className={cn(
-              'input',
-              leftIcon && 'pl-12',
-              (rightIcon || isPassword) && 'pr-12',
-              error && 'border-red-500 focus:ring-red-500',
+              'w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-primary-100 dark:focus:ring-primary-900/30 focus:border-primary-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed',
+              leftIcon && 'pl-11',
+              (rightIcon || isPassword) && 'pr-11',
+              error && 'border-red-500 focus:ring-red-100 dark:focus:ring-red-900/30 focus:border-red-500',
               className
             )}
             {...props}
@@ -47,7 +47,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors bg-transparent p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
             >
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -59,10 +59,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
         {hint && !error && (
-          <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{hint}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{hint}</p>
         )}
         {error && (
-          <p className="mt-1.5 text-xs text-red-500">{error}</p>
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium animate-in slide-in-from-top-1">{error}</p>
         )}
       </div>
     );

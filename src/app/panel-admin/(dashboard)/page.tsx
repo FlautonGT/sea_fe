@@ -110,7 +110,7 @@ export default function AdminDashboardPage() {
         <StatsCard
           title="Total Pendapatan"
           value={formatCurrency(overview?.summary?.totalRevenue || 0)}
-          icon={<DollarSign className="w-5 h-5 text-primary" />}
+          icon={<DollarSign className="w-5 h-5 text-primary-600" />}
           loading={loading}
         />
         <StatsCard
@@ -158,7 +158,7 @@ export default function AdminDashboardPage() {
             <h2 className="text-lg font-semibold text-gray-900">Produk Terlaris</h2>
             <Link
               href="/panel-admin/products"
-              className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+              className="text-sm text-primary-600 hover:underline inline-flex items-center gap-1"
             >
               Lihat Semua <ArrowRight className="w-4 h-4" />
             </Link>
@@ -184,7 +184,7 @@ export default function AdminDashboardPage() {
                   key={product.code}
                   className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-sm font-bold text-primary">
+                  <div className="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center text-sm font-bold text-primary-600">
                     {index + 1}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -206,7 +206,7 @@ export default function AdminDashboardPage() {
             <h2 className="text-lg font-semibold text-gray-900">Metode Pembayaran Populer</h2>
             <Link
               href="/panel-admin/payment-channels"
-              className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+              className="text-sm text-primary-600 hover:underline inline-flex items-center gap-1"
             >
               Lihat Semua <ArrowRight className="w-4 h-4" />
             </Link>
@@ -255,7 +255,7 @@ export default function AdminDashboardPage() {
           <h2 className="text-lg font-semibold text-gray-900">Status Provider</h2>
           <Link
             href="/panel-admin/providers"
-            className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+            className="text-sm text-primary-600 hover:underline inline-flex items-center gap-1"
           >
             Lihat Detail <ArrowRight className="w-4 h-4" />
           </Link>
@@ -310,30 +310,30 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Link
             href="/panel-admin/transactions"
-            className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary/5 transition-colors"
+            className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors"
           >
-            <ShoppingCart className="w-6 h-6 text-primary" />
+            <ShoppingCart className="w-6 h-6 text-primary-600" />
             <span className="text-sm font-medium text-gray-700">Transaksi</span>
           </Link>
           <Link
             href="/panel-admin/users"
-            className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary/5 transition-colors"
+            className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors"
           >
-            <Users className="w-6 h-6 text-primary" />
+            <Users className="w-6 h-6 text-primary-600" />
             <span className="text-sm font-medium text-gray-700">Pengguna</span>
           </Link>
           <Link
             href="/panel-admin/promos"
-            className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary/5 transition-colors"
+            className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors"
           >
-            <TrendingUp className="w-6 h-6 text-primary" />
+            <TrendingUp className="w-6 h-6 text-primary-600" />
             <span className="text-sm font-medium text-gray-700">Promo</span>
           </Link>
           <Link
             href="/panel-admin/reports"
-            className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary/5 transition-colors"
+            className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors"
           >
-            <Activity className="w-6 h-6 text-primary" />
+            <Activity className="w-6 h-6 text-primary-600" />
             <span className="text-sm font-medium text-gray-700">Laporan</span>
           </Link>
         </div>

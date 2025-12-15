@@ -119,7 +119,7 @@ export default function ProvidersPage() {
         <StatsCard
           title="Total Provider"
           value={providers.length.toString()}
-          icon={<Server className="w-5 h-5 text-primary" />}
+          icon={<Server className="w-5 h-5 text-primary-600" />}
           loading={loading}
         />
         <StatsCard
@@ -176,11 +176,11 @@ export default function ProvidersPage() {
                   </div>
                 </div>
 
-      {error && (
-        <div className="p-3 rounded-lg bg-red-50 text-sm text-red-700">
-          {error}
-        </div>
-      )}
+                {error && (
+                  <div className="p-3 rounded-lg bg-red-50 text-sm text-red-700">
+                    {error}
+                  </div>
+                )}
                 <StatusBadge status={provider.healthStatus} size="sm" />
               </div>
 

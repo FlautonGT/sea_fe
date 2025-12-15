@@ -12,6 +12,7 @@ interface PromoModalProps {
   isLoading: boolean;
   currency: string;
   onSelectPromo: (promo: PromoCode) => void;
+  locale?: string;
 }
 
 export default function PromoModal({
@@ -21,6 +22,7 @@ export default function PromoModal({
   isLoading,
   currency,
   onSelectPromo,
+  locale = 'id',
 }: PromoModalProps) {
   if (!isOpen) return null;
 
@@ -33,7 +35,7 @@ export default function PromoModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Promo yang tersedia
+            {locale === 'id' ? 'Promo yang tersedia' : 'Available Promos'}
           </h3>
           <button
             onClick={onClose}
@@ -49,24 +51,24 @@ export default function PromoModal({
         <div className="flex-1 overflow-y-auto p-6">
           {isLoading ? (
             <div className="text-center py-8">
-              <p className="text-gray-500">Memuat...</p>
+              <p className="text-gray-500">{locale === 'id' ? 'Memuat...' : 'Loading...'}</p>
             </div>
           ) : promos.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-500">Tidak ada promo tersedia</p>
+              <p className="text-gray-500">{locale === 'id' ? 'Tidak ada promo tersedia' : 'No promos available'}</p>
             </div>
           ) : (
             <div className="space-y-4">
               {promos.map((promo) => {
                 const discountText = promo.promoPercentage > 0
-                  ? `Diskon hingga ${promo.promoPercentage}%`
+                  ? (locale === 'id' ? `Diskon hingga ${promo.promoPercentage}%` : `Up to ${promo.promoPercentage}% off`)
                   : promo.promoFlat > 0
-                  ? `Diskon ${formatCurrency(promo.promoFlat, currency)}`
-                  : 'Diskon';
-                
+                    ? (locale === 'id' ? `Diskon ${formatCurrency(promo.promoFlat, currency)}` : `${formatCurrency(promo.promoFlat, currency)} off`)
+                    : (locale === 'id' ? 'Diskon' : 'Discount');
+
                 const isAvailable = new Date(promo.expiredAt) > new Date() && promo.isAvailable;
                 const minAmountText = promo.minAmount > 0
-                  ? `Minimum pembelian ${formatCurrency(promo.minAmount, currency)}`
+                  ? (locale === 'id' ? `Minimum pembelian ${formatCurrency(promo.minAmount, currency)}` : `Min. purchase ${formatCurrency(promo.minAmount, currency)}`)
                   : '';
 
                 return (
@@ -84,11 +86,11 @@ export default function PromoModal({
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4" />
-                        <span>Promo berlaku hingga {new Date(promo.expiredAt).toLocaleDateString('id-ID')}</span>
+                        <span>{locale === 'id' ? 'Berlaku hingga' : 'Valid until'} {new Date(promo.expiredAt).toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US')}</span>
                       </div>
                       {minAmountText && (
                         <div className="flex items-center gap-2">
@@ -102,7 +104,11 @@ export default function PromoModal({
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span>Batas penggunaan {promo.maxUsagePerId} kali untuk setiap akun.</span>
+                        <span>
+                          {locale === 'id'
+                            ? `Batas penggunaan ${promo.maxUsagePerId} kali per akun.`
+                            : `Usage limit ${promo.maxUsagePerId}x per account.`}
+                        </span>
                       </div>
                       {promo.products && promo.products.length > 0 && (
                         <div className="flex items-center gap-2">
@@ -110,7 +116,7 @@ export default function PromoModal({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           <span>
-                            Promo ini hanya berlaku untuk produk {promo.products.map(p => p.name).join(', ')}
+                            {locale === 'id' ? 'Hanya untuk:' : 'Only for:'} {promo.products.map(p => p.name).join(', ')}
                           </span>
                         </div>
                       )}
@@ -118,7 +124,7 @@ export default function PromoModal({
 
                     <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
                       <span className="text-sm font-medium text-orange-600 dark:text-orange-400">
-                        Kode Promo: {promo.code}
+                        {locale === 'id' ? 'Kode:' : 'Code:'} {promo.code}
                       </span>
                       <button
                         onClick={() => onSelectPromo(promo)}
@@ -130,7 +136,7 @@ export default function PromoModal({
                             : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                         )}
                       >
-                        {isAvailable ? 'Gunakan' : 'Tidak Tersedia'}
+                        {isAvailable ? (locale === 'id' ? 'Gunakan' : 'Use') : (locale === 'id' ? 'Tidak Tersedia' : 'Unavailable')}
                       </button>
                     </div>
                   </div>

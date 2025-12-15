@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Search, Menu, User, Moon, Sun, LogOut, ChevronRight, X } from 'lucide-react';
+import { Search, Menu, User, Moon, Sun, LogOut, ChevronRight, X, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLocale, useTranslation } from '@/contexts/LocaleContext';
@@ -22,7 +22,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { regionCode, currency, flagUrl, getLocalizedPath } = useLocale();
   const { t } = useTranslation();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
@@ -67,7 +67,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
       <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
         {/* Top colored bar */}
         <div className="h-1 bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600" />
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Mobile Menu Button */}
@@ -94,7 +94,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search game name or anything here"
+                  placeholder={t('searchPlaceholder')}
                   className="w-full pl-4 pr-10 py-2.5 rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
                 <button
@@ -114,13 +114,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   href={getLocalizedPath('/')}
                   className="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
                 >
-                  Beranda
+                  {t('home')}
                 </Link>
                 <Link
-                  href={getLocalizedPath('/check-transaction')}
+                  href={getLocalizedPath('/invoice')}
                   className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                 >
-                  Cek Transaksi
+                  {t('checkTransaction')}
                 </Link>
               </nav>
 
@@ -186,14 +186,23 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
                       <div className="py-2">
                         <Link
-                          href={getLocalizedPath('/account')}
+                          href={getLocalizedPath('/dashboard')}
+                          onClick={() => setShowUserMenu(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                          <LayoutDashboard className="w-4 h-4" />
+                          {t('dashboard')}
+                        </Link>
+
+                        <Link
+                          href={getLocalizedPath('/profile')}
                           onClick={() => setShowUserMenu(false)}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
                           <User className="w-4 h-4" />
                           {t('myAccount')}
                         </Link>
-                        
+
                         <button
                           onClick={toggleTheme}
                           className="flex items-center justify-between w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -231,7 +240,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   href={getLocalizedPath('/login')}
                   className="inline-flex items-center gap-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
                 >
-                  Masuk <ChevronRight className="w-4 h-4" />
+                  {t('login')} <ChevronRight className="w-4 h-4" />
                 </Link>
               )}
             </div>
@@ -246,7 +255,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search game name or anything here"
+                  placeholder={t('searchPlaceholder')}
                   className="w-full pl-4 pr-20 py-2.5 rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">

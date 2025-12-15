@@ -25,7 +25,7 @@ export default function PromosPage() {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
@@ -59,7 +59,7 @@ export default function PromosPage() {
       header: 'Kode Promo',
       render: (item: AdminPromo) => (
         <div>
-          <p className="font-mono font-bold text-primary">{item.code}</p>
+          <p className="font-mono font-bold text-primary-600">{item.code}</p>
           <p className="text-xs text-gray-500">{item.title}</p>
         </div>
       ),
@@ -71,7 +71,7 @@ export default function PromosPage() {
         <div className="flex items-center gap-2">
           <Percent className="w-4 h-4 text-green-600" />
           <span className="font-medium text-gray-900">
-            {item.promoPercentage > 0 
+            {item.promoPercentage > 0
               ? `${item.promoPercentage}%`
               : `Rp ${item.promoFlat.toLocaleString('id-ID')}`
             }
@@ -88,8 +88,8 @@ export default function PromosPage() {
             {item.currentUsage?.toLocaleString('id-ID')} / {item.maxUsage.toLocaleString('id-ID')}
           </p>
           <div className="w-24 h-1.5 bg-gray-200 rounded-full mt-1">
-            <div 
-              className="h-full bg-primary rounded-full"
+            <div
+              className="h-full bg-primary-600 rounded-full"
               style={{ width: `${Math.min(((item.currentUsage || 0) / item.maxUsage) * 100, 100)}%` }}
             />
           </div>
@@ -148,7 +148,7 @@ export default function PromosPage() {
       render: (item: AdminPromo) => (
         <div className="flex items-center gap-1">
           <button
-            className="p-2 text-gray-500 hover:text-primary hover:bg-gray-100 rounded-lg"
+            className="p-2 text-gray-500 hover:text-primary-600 hover:bg-gray-100 rounded-lg"
             onClick={(e) => {
               e.stopPropagation();
               setEditingPromo(item);
@@ -208,8 +208,8 @@ export default function PromosPage() {
               setShowForm(true);
             }}
             className={cn(
-              'inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg',
-              'text-sm font-medium hover:bg-primary/90 transition-colors'
+              'inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg',
+              'text-sm font-medium hover:bg-primary-700 transition-colors'
             )}
           >
             <Plus className="w-4 h-4" />
@@ -229,7 +229,7 @@ export default function PromosPage() {
         <StatsCard
           title="Total Promo"
           value={pagination?.totalRows?.toString() || '0'}
-          icon={<Tags className="w-5 h-5 text-primary" />}
+          icon={<Tags className="w-5 h-5 text-primary-600" />}
           loading={loading}
         />
         <StatsCard
@@ -265,7 +265,7 @@ export default function PromosPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari kode promo..."
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
             />
           </div>
         </div>
@@ -280,12 +280,12 @@ export default function PromosPage() {
         pagination={
           pagination
             ? {
-                page: pagination.page,
-                totalPages: pagination.totalPages,
-                totalRows: pagination.totalRows,
-                limit: pagination.limit,
-                onPageChange: setPage,
-              }
+              page: pagination.page,
+              totalPages: pagination.totalPages,
+              totalRows: pagination.totalRows,
+              limit: pagination.limit,
+              onPageChange: setPage,
+            }
             : undefined
         }
       />

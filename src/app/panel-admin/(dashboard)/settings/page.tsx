@@ -111,7 +111,7 @@ export default function SettingsPage() {
                   className={cn(
                     'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
                     activeTab === tab.id
-                      ? 'bg-primary text-white'
+                      ? 'bg-primary-600 text-white'
                       : 'text-gray-700 hover:bg-gray-100'
                   )}
                 >
@@ -141,7 +141,7 @@ export default function SettingsPage() {
                       ...settings,
                       general: { ...settings.general, siteName: e.target.value }
                     })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                   />
                 </div>
 
@@ -156,7 +156,7 @@ export default function SettingsPage() {
                       general: { ...settings.general, siteDescription: e.target.value }
                     })}
                     rows={3}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                   />
                 </div>
 
@@ -178,7 +178,7 @@ export default function SettingsPage() {
                       })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-600/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                   </label>
                 </div>
               </div>
@@ -188,8 +188,8 @@ export default function SettingsPage() {
                   onClick={() => handleSave('general', settings.general)}
                   disabled={saving}
                   className={cn(
-                    'inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-lg',
-                    'font-medium hover:bg-primary/90 transition-colors',
+                    'inline-flex items-center gap-2 px-6 py-2.5 bg-primary-600 text-white rounded-lg',
+                    'font-medium hover:bg-primary-700 transition-colors',
                     'disabled:opacity-50 disabled:cursor-not-allowed'
                   )}
                 >
@@ -220,7 +220,7 @@ export default function SettingsPage() {
                       ...settings,
                       transaction: { ...settings.transaction, orderExpiry: parseInt(e.target.value) }
                     })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                   />
                   <p className="text-sm text-gray-500 mt-1">
                     Default: 3600 detik (1 jam)
@@ -238,7 +238,7 @@ export default function SettingsPage() {
                       ...settings,
                       transaction: { ...settings.transaction, maxRetryAttempts: parseInt(e.target.value) }
                     })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                   />
                 </div>
 
@@ -257,7 +257,7 @@ export default function SettingsPage() {
                       })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-600/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                   </label>
                 </div>
               </div>
@@ -267,8 +267,8 @@ export default function SettingsPage() {
                   onClick={() => handleSave('transaction', settings.transaction)}
                   disabled={saving}
                   className={cn(
-                    'inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-lg',
-                    'font-medium hover:bg-primary/90 transition-colors',
+                    'inline-flex items-center gap-2 px-6 py-2.5 bg-primary-600 text-white rounded-lg',
+                    'font-medium hover:bg-primary-700 transition-colors',
                     'disabled:opacity-50 disabled:cursor-not-allowed'
                   )}
                 >
@@ -303,7 +303,7 @@ export default function SettingsPage() {
                       })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-600/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                   </label>
                 </div>
 
@@ -322,7 +322,7 @@ export default function SettingsPage() {
                       })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-600/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                   </label>
                 </div>
 
@@ -341,7 +341,7 @@ export default function SettingsPage() {
                       })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-600/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                   </label>
                 </div>
               </div>
@@ -351,8 +351,8 @@ export default function SettingsPage() {
                   onClick={() => handleSave('notification', settings.notification)}
                   disabled={saving}
                   className={cn(
-                    'inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-lg',
-                    'font-medium hover:bg-primary/90 transition-colors',
+                    'inline-flex items-center gap-2 px-6 py-2.5 bg-primary-600 text-white rounded-lg',
+                    'font-medium hover:bg-primary-700 transition-colors',
                     'disabled:opacity-50 disabled:cursor-not-allowed'
                   )}
                 >
@@ -383,7 +383,7 @@ export default function SettingsPage() {
                       ...settings,
                       security: { ...settings.security, maxLoginAttempts: parseInt(e.target.value) }
                     })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                   />
                 </div>
 
@@ -398,7 +398,7 @@ export default function SettingsPage() {
                       ...settings,
                       security: { ...settings.security, lockoutDuration: parseInt(e.target.value) }
                     })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                   />
                 </div>
 
@@ -413,7 +413,7 @@ export default function SettingsPage() {
                       ...settings,
                       security: { ...settings.security, sessionTimeout: parseInt(e.target.value) }
                     })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                   />
                 </div>
 
@@ -432,7 +432,7 @@ export default function SettingsPage() {
                       })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-600/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                   </label>
                 </div>
               </div>
@@ -442,8 +442,8 @@ export default function SettingsPage() {
                   onClick={() => handleSave('security', settings.security)}
                   disabled={saving}
                   className={cn(
-                    'inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-lg',
-                    'font-medium hover:bg-primary/90 transition-colors',
+                    'inline-flex items-center gap-2 px-6 py-2.5 bg-primary-600 text-white rounded-lg',
+                    'font-medium hover:bg-primary-700 transition-colors',
                     'disabled:opacity-50 disabled:cursor-not-allowed'
                   )}
                 >

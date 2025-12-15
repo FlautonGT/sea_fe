@@ -134,7 +134,7 @@ export default function ProductsPage() {
       render: (item: AdminProduct) => (
         <div className="flex items-center gap-1">
           <button
-            className="p-2 text-gray-500 hover:text-primary hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 text-gray-500 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               setEditingProduct(item);
@@ -188,8 +188,8 @@ export default function ProductsPage() {
               setShowForm(true);
             }}
             className={cn(
-              'inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg',
-              'text-sm font-medium hover:bg-primary/90 transition-colors'
+              'inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg',
+              'text-sm font-medium hover:bg-primary-700 transition-colors'
             )}
           >
             <Plus className="w-4 h-4" />
@@ -209,7 +209,7 @@ export default function ProductsPage() {
         <StatsCard
           title="Total Produk"
           value={pagination?.totalRows?.toString() || '0'}
-          icon={<Package className="w-5 h-5 text-primary" />}
+          icon={<Package className="w-5 h-5 text-primary-600" />}
           loading={loading}
         />
         <StatsCard
@@ -245,7 +245,7 @@ export default function ProductsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari produk..."
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
             />
           </div>
         </div>

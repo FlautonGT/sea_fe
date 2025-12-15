@@ -5,7 +5,9 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { addToFavorites } from '@/lib/favorites';
-import { Zap, Clock, Shield, Tag, ChevronDown, ChevronUp } from 'lucide-react';
+import { saveLocalTransaction } from '@/lib/localHistory';
+import { Zap, Clock, Shield, Tag, ChevronDown, ChevronUp, Mail, Minus, Plus, AlertCircle, History } from 'lucide-react';
+import { saveRecentAccount, getRecentAccounts, SavedAccount } from '@/lib/recentAccounts';
 import { motion, AnimatePresence } from 'framer-motion';
 import MainLayout from '@/components/layout/MainLayout';
 import { Input, Button, SKUCard, LoadingPage } from '@/components/ui';
@@ -25,6 +27,7 @@ import {
   AccountValidation,
   OrderInquiry,
   PromoCode,
+  User,
 } from '@/types';
 import {
   getProducts,
@@ -54,6 +57,7 @@ function OrderSummary({
   isLoading,
   orderError,
   onOrder,
+  quantity,
 }: {
   product: Product | null;
   sku: SKU | null;
@@ -65,14 +69,17 @@ function OrderSummary({
   isLoading: boolean;
   orderError?: string;
   onOrder: () => void;
+  quantity: number;
 }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   // Import AnimatedIcons dynamically or assume it's available in scope if imported at top
   // For safety in this file refactor, we usually expect imports at top. 
   // We'll use the AnimatedFailed from imports. 
   // Note: We need to make sure AnimatedFailed is imported in the main file.
 
-  const subtotal = sku?.price || 0;
+  // Note: We need to make sure AnimatedFailed is imported in the main file.
+
+  const subtotal = (sku?.price || 0) * quantity;
   const paymentFee = paymentChannel
     ? paymentChannel.feeAmount + (subtotal * paymentChannel.feePercentage) / 100
     : 0;
@@ -96,10 +103,10 @@ function OrderSummary({
                 <Tag className="w-6 h-6 text-gray-400" />
               </div>
               <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                Belum ada pesanan
+                {language === 'id' ? 'Belum ada pesanan' : 'No order yet'}
               </p>
               <p className="text-xs text-gray-500 max-w-[200px] mx-auto">
-                Silahkan lengkapi data akun dan pilih item terlebih dahulu
+                {language === 'id' ? 'Silahkan lengkapi data akun dan pilih item terlebih dahulu' : 'Please complete account data and select item first'}
               </p>
             </div>
           ) : (
@@ -121,7 +128,7 @@ function OrderSummary({
                     {product?.title}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                    {sku?.name || 'Belum pilih item'}
+                    {sku?.name || (language === 'id' ? 'Belum pilih item' : 'No item selected')}
                   </p>
                   {accountData && (
                     <div className="flex items-center gap-1.5 mt-1">
@@ -135,13 +142,15 @@ function OrderSummary({
               </div>
 
               {/* Error Animation */}
+              {/* Error Alert */}
               {orderError && (
-                <div className="bg-red-50 dark:bg-red-900/10 rounded-xl p-4 border border-red-100 dark:border-red-900/20 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="flex flex-col items-center text-center gap-2">
-                    <div className="transform scale-75">
-                      <AnimatedFailed />
-                    </div>
-                    <p className="text-xs font-semibold text-red-600 dark:text-red-400 mt-1">
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-xl animate-shake flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-red-600 dark:text-red-400">
+                      {language === 'id' ? 'Gagal Memproses' : 'Process Failed'}
+                    </p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-0.5 leading-tight">
                       {orderError}
                     </p>
                   </div>
@@ -152,7 +161,7 @@ function OrderSummary({
               <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-gray-700">
                 {paymentChannel && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Metode</span>
+                    <span className="text-gray-500 dark:text-gray-400">{language === 'id' ? 'Metode' : 'Method'}</span>
                     <span className="font-medium text-gray-900 dark:text-white truncate max-w-[120px]">
                       {paymentChannel.name}
                     </span>
@@ -160,24 +169,32 @@ function OrderSummary({
                 )}
 
                 {sku && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Harga</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {formatCurrency(subtotal, currency)}
-                    </span>
-                  </div>
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500 dark:text-gray-400">{language === 'id' ? 'Harga' : 'Price'}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {formatCurrency(subtotal, currency)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500 dark:text-gray-400">{language === 'id' ? 'Jumlah' : 'Qty'}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {quantity}x
+                      </span>
+                    </div>
+                  </>
                 )}
 
                 {promoDiscount > 0 && (
                   <div className="flex justify-between text-sm text-green-600 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded">
-                    <span className="font-medium">Diskon</span>
+                    <span className="font-medium">{language === 'id' ? 'Diskon' : 'Discount'}</span>
                     <span className="font-bold">-{formatCurrency(promoDiscount, currency)}</span>
                   </div>
                 )}
 
                 {paymentFee > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Biaya Admin</span>
+                    <span className="text-gray-500 dark:text-gray-400">{language === 'id' ? 'Biaya Admin' : 'Admin Fee'}</span>
                     <span className="font-medium text-gray-900 dark:text-white">
                       {formatCurrency(Math.round(paymentFee), currency)}
                     </span>
@@ -189,7 +206,7 @@ function OrderSummary({
               <div className="pt-4 border-t border-dashed border-gray-200 dark:border-gray-700">
                 <div className="flex justify-between items-end">
                   <span className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-                    Total Bayar
+                    {language === 'id' ? 'Total Bayar' : 'Total'}
                   </span>
                   <span className="text-2xl font-extrabold text-primary-600 dark:text-primary-400 leading-none">
                     {paymentChannel ? formatCurrency(Math.round(total), currency) : 'Rp 0'}
@@ -212,7 +229,7 @@ function OrderSummary({
                 : "opacity-50 cursor-not-allowed"
             )}
           >
-            {isLoading ? 'Memproses...' : 'Pesan Sekarang'}
+            {isLoading ? (language === 'id' ? 'Memproses...' : 'Processing...') : (language === 'id' ? 'Pesan Sekarang' : 'Order Now')}
           </Button>
         </div>
       </div>
@@ -235,6 +252,10 @@ function PaymentCategorySection({
   onToggle,
   amount,
   currency,
+  user,
+  isLoggedIn,
+  onLogin,
+  locale,
 }: {
   category: PaymentChannelCategory;
   channels: PaymentChannel[];
@@ -244,6 +265,10 @@ function PaymentCategorySection({
   onToggle: () => void;
   amount: number;
   currency: string;
+  user: User | null;
+  isLoggedIn: boolean;
+  onLogin: () => void;
+  locale: string;
 }) {
   const categoryChannels = channels.filter((ch) => {
     if (category.code === '') {
@@ -296,19 +321,79 @@ function PaymentCategorySection({
           <div className="grid grid-cols-2 xs:grid-cols-3 gap-2 md:gap-3">
             {categoryChannels.map((channel) => {
               const isSelected = selectedChannel?.code === channel.code;
-              const fee =
-                channel.feeAmount + (amount * channel.feePercentage) / 100;
+              const fee = channel.feeAmount + (amount * channel.feePercentage) / 100;
               const totalWithFee = amount + fee;
+
+              // BALANCE Logic
+              const isBalance = channel.code === 'BALANCE';
+              let isDisabled = false;
+              let statusLabel = null;
+              let balanceAmount = 0;
+
+              if (isBalance) {
+                if (!isLoggedIn) {
+                  isDisabled = true;
+                  statusLabel = (
+                    <div className="mt-2 w-full">
+                      <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={(e) => {
+                        e.stopPropagation();
+                        onLogin();
+                      }}>
+                        Login
+                      </Button>
+                    </div>
+                  );
+                } else if (user) {
+                  // Check balance
+                  // Assuming balance is in IDR for now, or match currency
+                  // API User type: balance: { IDR: number, ... }
+                  balanceAmount = user.balance?.[currency as keyof typeof user.balance] || 0;
+                  if (balanceAmount < totalWithFee) {
+                    isDisabled = true;
+                    statusLabel = (
+                      <span className="text-[9px] text-red-500 font-bold mt-1 text-center">
+                        {locale === 'id' ? 'Saldo Kurang' : 'Insufficient Balance'} ({formatCurrency(balanceAmount, currency)})
+                      </span>
+                    );
+                  } else {
+                    statusLabel = (
+                      <span className="text-[10px] text-green-600 font-medium mt-0.5">
+                        {locale === 'id' ? 'Saldo:' : 'Balance:'} {formatCurrency(balanceAmount, currency)}
+                      </span>
+                    );
+                  }
+                }
+              } else {
+                // Standard Check
+                const isAvailable = amount > 0 ? (totalWithFee >= channel.minAmount && totalWithFee <= channel.maxAmount) : true;
+                if (!isAvailable) {
+                  isDisabled = true;
+                  statusLabel = (
+                    <span className="text-[9px] text-red-500 font-bold mt-1 text-center">
+                      {totalWithFee < channel.minAmount
+                        ? `Min ${formatCurrency(channel.minAmount, currency)}`
+                        : `Max ${formatCurrency(channel.maxAmount, currency)}`}
+                    </span>
+                  );
+                }
+              }
+
 
               return (
                 <button
                   key={channel.code}
-                  onClick={() => onSelect(channel)}
+                  onClick={() => {
+                    if (!isDisabled) onSelect(channel);
+                  }}
+                  disabled={isDisabled && !(!isLoggedIn && isBalance)} // Allow click if login needed (handled by button inside) or pure disabled
                   className={cn(
-                    'relative flex flex-col items-center p-2 rounded-lg border transition-all hover:border-gray-300 dark:hover:border-gray-600',
+                    'relative flex flex-col items-center justify-between h-full p-2 rounded-lg border transition-all',
                     isSelected
                       ? 'border-primary-500 bg-white dark:bg-gray-800 ring-1 ring-primary-500 shadow-sm'
-                      : 'border-transparent bg-white dark:bg-gray-800'
+                      : 'border-transparent bg-white dark:bg-gray-800',
+                    isDisabled && !(isBalance && !isLoggedIn)
+                      ? 'opacity-50 cursor-not-allowed grayscale bg-gray-50'
+                      : 'hover:border-gray-300 dark:hover:border-gray-600'
                   )}
                 >
                   <Image
@@ -319,8 +404,16 @@ function PaymentCategorySection({
                     className="h-5 md:h-7 w-auto object-contain mb-1.5"
                   />
                   <span className="text-[10px] md:text-xs text-center text-gray-500 dark:text-gray-400 leading-tight">
-                    {formatCurrency(Math.round(totalWithFee), currency)}
+                    {amount === 0
+                      ? `Min ${formatCurrency(channel.minAmount, currency)}`
+                      : (totalWithFee < channel.minAmount || totalWithFee > channel.maxAmount)
+                        ? null
+                        : formatCurrency(Math.round(totalWithFee), currency)
+                    }
                   </span>
+
+                  {/* Status Label (Error, Balance, Login) */}
+                  {statusLabel}
 
                   {isSelected && (
                     <div className="absolute top-1 right-1 w-3.5 h-3.5 md:w-4 md:h-4 bg-primary-500 rounded-full flex items-center justify-center">
@@ -347,7 +440,7 @@ export default function ProductDetailPage() {
   const slug = params.slug as string;
   const skuParam = searchParams.get('sku');
 
-  const { user, token } = useAuth();
+  const { user, token, refreshUser } = useAuth();
   const { regionCode, currency, getLocalizedPath, language } = useLocale();
   const { t } = useTranslation();
 
@@ -386,8 +479,13 @@ export default function ProductDetailPage() {
   const [orderError, setOrderError] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [orderInquiryData, setOrderInquiryData] = useState<OrderInquiry | null>(null);
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(true);
   const [isMobileSummaryExpanded, setIsMobileSummaryExpanded] = useState(false);
+  const [showEmail, setShowEmail] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [recentAccounts, setRecentAccounts] = useState<SavedAccount[]>([]);
+  const [showRecentAccounts, setShowRecentAccounts] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   // Debug: Monitor modal state changes
   useEffect(() => {
@@ -430,6 +528,9 @@ export default function ProductDetailPage() {
             getPaymentChannels(regionCode, 'purchase'),
           ]);
 
+        // Load recent accounts
+        setRecentAccounts(getRecentAccounts(regionCode, foundProduct.code));
+
         if (fieldsRes.data) setFields(fieldsRes.data);
         if (sectionsRes.data) {
           setSections(sectionsRes.data);
@@ -465,11 +566,20 @@ export default function ProductDetailPage() {
     }
   }, [slug, regionCode, router, getLocalizedPath, skuParam]);
 
+  // Refresh user session on mount (to get latest balance)
+  useEffect(() => {
+    if (token) {
+      refreshUser();
+    }
+  }, [token, refreshUser]);
+
   // Section Refs for Auto-scroll
   const accountSectionRef = useRef<HTMLDivElement>(null);
   const skuSectionRef = useRef<HTMLDivElement>(null);
+  const quantitySectionRef = useRef<HTMLDivElement>(null); // Added Quantity Ref
   const paymentSectionRef = useRef<HTMLDivElement>(null);
   const contactSectionRef = useRef<HTMLDivElement>(null); // Added Contact Info Ref
+  const promoSectionRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll helper
   const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
@@ -487,6 +597,10 @@ export default function ProductDetailPage() {
       });
     }
   }, [user]);
+
+  // Field Validation Errors
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [createOrderError, setCreateOrderError] = useState(''); // Error specifically for the modal creation step
 
   // Validate account when fields are filled
   const handleValidateAccount = useCallback(async () => {
@@ -516,7 +630,50 @@ export default function ProductDetailPage() {
       );
 
       if (response.error) {
-        setAccountError(response.error.message);
+        // Map error codes to user-friendly messages
+        const errorCode = response.error.code;
+        let errorMessage = response.error.message;
+
+        switch (errorCode) {
+          case 'NOT_FOUND':
+          case 'ACCOUNT_NOT_FOUND':
+            errorMessage = language === 'id'
+              ? 'Akun tidak ditemukan. Mohon periksa kembali User ID atau Server ID Anda.'
+              : 'Account not found. Please check your User ID or Server ID.';
+            break;
+          case 'PRODUCT_NOT_FOUND':
+            errorMessage = language === 'id'
+              ? 'Produk tidak ditemukan atau sedang tidak aktif.'
+              : 'Product not found or inactive.';
+            break;
+          case 'INQUIRY_NOT_CONFIGURED':
+            errorMessage = language === 'id'
+              ? 'Layanan validasi belum dikonfigurasi untuk produk ini, Mohon untuk menghubungi Support.'
+              : 'Validation service not configured for this product, Please contact Support.';
+            break;
+          case 'INQUIRY_SERVICE_ERROR':
+          case 'INQUIRY_RESPONSE_ERROR':
+            errorMessage = language === 'id'
+              ? 'Gangguan koneksi ke provider. Silakan coba beberapa saat lagi.'
+              : 'Provider connection error. Please try again later.';
+            break;
+          case 'TOO_MANY_REQUESTS':
+            errorMessage = language === 'id'
+              ? 'Terlalu banyak permintaan. Mohon tunggu sebentar.'
+              : 'Too many requests. Please wait a moment.';
+            break;
+          case 'INTERNAL_ERROR':
+          case 'BAD_REQUEST':
+            errorMessage = language === 'id'
+              ? 'Terjadi kesalahan sistem. Silakan coba lagi.'
+              : 'System error. Please try again.';
+            if (errorCode === 'BAD_REQUEST' && response.error.message?.toLowerCase().includes('server')) {
+              errorMessage = language === 'id' ? 'Server ID wajib diisi.' : 'Server ID is required.';
+            }
+            break;
+        }
+
+        setAccountError(errorMessage);
         setAccountData(null);
       } else if (response.data) {
         setAccountData(response.data);
@@ -573,16 +730,103 @@ export default function ProductDetailPage() {
         promoCode: promoCode.trim(),
         productCode: product.code,
         skuCode: selectedSKU.code,
+        paymentCode: selectedPayment?.code || '',
         region: regionCode,
-        amount: selectedSKU.price.toString(),
+        account: fieldValues,
+        quantity: quantity,
       });
 
       if (res.error) {
-        setPromoError(res.error.message);
+        // Map Error Codes (HTTP Errors)
+        const errorCode = res.error.code;
+        let errorMessage = res.error.message;
+
+        switch (errorCode) {
+          case 'BAD_REQUEST':
+            errorMessage = language === 'id' ? 'Request tidak valid.' : 'Invalid request.';
+            // Check for specific fields
+            if (res.error.fields) {
+              if (res.error.fields.promoCode) errorMessage = language === 'id' ? 'Kode promo wajib diisi.' : 'Promo code is required.';
+              if (res.error.fields.account) errorMessage = language === 'id' ? 'Data akun tidak valid/kurang lengkap.' : 'Invalid or incomplete account data.';
+            }
+            break;
+          case 'VALIDATION_ERROR':
+            errorMessage = language === 'id' ? 'Validasi gagal. Coba cek kembali data Anda.' : 'Validation failed. Please check your data.';
+            if (res.error.message?.includes('Missing required account')) {
+              errorMessage = language === 'id' ? 'Mohon lengkapi Data Akun terlebih dahulu.' : 'Please complete Account Data first.';
+            }
+            break;
+          case 'PRODUCT_NOT_FOUND':
+            errorMessage = language === 'id' ? 'Produk tidak valid.' : 'Invalid product.';
+            break;
+          case 'SKU_NOT_FOUND':
+            errorMessage = language === 'id' ? 'Item tidak valid.' : 'Invalid Item.';
+            break;
+          case 'PROMO_EXPIRED':
+            errorMessage = language === 'id' ? 'Ouch! Kode promo ini sudah kadaluarsa.' : 'Oops! This promo code has expired.';
+            break;
+          case 'PRODUCT_NOT_APPLICABLE':
+            errorMessage = language === 'id' ? 'Kode promo tidak berlaku untuk produk yang Anda pilih.' : 'Promo not applicable for this product.';
+            break;
+          case 'PAYMENT_NOT_APPLICABLE':
+            errorMessage = language === 'id' ? 'Kode promo tidak berlaku untuk metode pembayaran yang Anda pilih.' : 'Promo not applicable for this payment method.';
+            break;
+          case 'MIN_AMOUNT_NOT_MET':
+            errorMessage = language === 'id' ? 'Total pembelian belum mencapai minimum syarat promo.' : 'Minimum transaction amount not met.';
+            break;
+          case 'INTERNAL_ERROR':
+            errorMessage = language === 'id' ? 'Terjadi kesalahan sistem.' : 'System error.';
+            break;
+        }
+        setPromoError(errorMessage);
         setPromoDiscount(0);
+
       } else if (res.data) {
-        setPromoDiscount(res.data.discountAmount);
-        setPromoError('');
+        // Check "valid" field first (Success 200 but logical failure)
+        if (res.data.valid === false) {
+          const reason = res.data.reason;
+          let failMessage = language === 'id' ? 'Kode promo tidak dapat digunakan.' : 'Promo code cannot be used.';
+
+          switch (reason) {
+            case 'PROMO_NOT_FOUND':
+              failMessage = language === 'id' ? 'Kode promo tidak ditemukan.' : 'Promo code not found.';
+              break;
+            case 'PROMO_NOT_ACTIVE':
+              failMessage = language === 'id' ? 'Kode promo sedang tidak aktif.' : 'Promo code is inactive.';
+              break;
+            case 'PROMO_NOT_STARTED':
+              failMessage = language === 'id' ? 'Kode promo belum dimulai.' : 'Promo code has not started yet.';
+              break;
+            case 'REGION_NOT_APPLICABLE':
+              failMessage = language === 'id' ? 'Promo tidak berlaku di negara Anda.' : 'Promo not available in your region.';
+              break;
+            case 'DAY_NOT_APPLICABLE':
+              failMessage = language === 'id' ? 'Promo tidak berlaku hari ini.' : 'Promo not available today.';
+              break;
+            case 'USAGE_LIMIT_EXCEEDED':
+              failMessage = language === 'id' ? 'Kuota promo global telah habis.' : 'Global promo quota exceeded.';
+              break;
+            case 'DAILY_USAGE_LIMIT_EXCEEDED':
+              failMessage = language === 'id' ? 'Kuota harian promo telah habis.' : 'Daily promo quota exceeded.';
+              break;
+            case 'USER_USAGE_LIMIT_EXCEEDED':
+              failMessage = language === 'id' ? 'Anda sudah mencapai batas penggunaan promo ini.' : 'You have reached the usage limit for this promo.';
+              break;
+            case 'DEVICE_USAGE_LIMIT_EXCEEDED':
+            case 'IP_USAGE_LIMIT_EXCEEDED':
+              failMessage = language === 'id' ? 'Anda sudah mencapai batas penggunaan.' : 'Usage limit exceeded for your device/IP.';
+              break;
+          }
+          setPromoError(failMessage);
+          setPromoDiscount(0);
+        } else {
+          // Valid Success
+          setPromoDiscount(res.data.discountAmount || 0);
+          setPromoError('');
+          if (res.data.promoDetails?.title) {
+            toast.success(`${language === 'id' ? 'Promo digunakan:' : 'Promo applied:'} ${res.data.promoDetails.title}`);
+          }
+        }
       }
     } catch (error) {
       console.error('Promo validation error:', error);
@@ -621,7 +865,9 @@ export default function ProductDetailPage() {
     }
 
     setSelectedSKU(sku);
-    setTimeout(() => scrollToSection(paymentSectionRef), 100);
+    // Reset quantity to 1 when changing SKU
+    setQuantity(1);
+    setTimeout(() => scrollToSection(quantitySectionRef), 100);
   };
 
   // Handle Payment Selection with Validation
@@ -649,13 +895,16 @@ export default function ProductDetailPage() {
     console.log('Starting order inquiry...');
     setIsOrdering(true);
     setOrderError('');
+    setFieldErrors({});
+    setCreateOrderError(''); // Clear creation error
+    setPromoError('');
 
     try {
       // Create order inquiry first
       const inquiryData: Record<string, unknown> = {
         productCode: product.code,
         skuCode: selectedSKU.code,
-        quantity: 1,
+        quantity: quantity,
         paymentCode: selectedPayment.code,
         phoneNumber: contactInfo.phoneNumber,
         ...fieldValues,
@@ -681,7 +930,74 @@ export default function ProductDetailPage() {
 
       if (inquiryRes.error) {
         console.error('Order inquiry error:', inquiryRes.error);
-        setOrderError(inquiryRes.error.message);
+
+        // Map Error Codes
+        const errorCode = inquiryRes.error.code;
+        let errorMessage = inquiryRes.error.message;
+
+        // Handle Field Errors if present
+        if (inquiryRes.error.fields) {
+          const newFieldErrors: Record<string, string> = {};
+
+          Object.entries(inquiryRes.error.fields).forEach(([key, value]) => {
+            // Map backend field names to frontend state if needed
+            // For now assuming: phoneNumber, email, promoCode map directly
+            if (key === 'promoCode') {
+              setPromoError(String(value));
+            } else {
+              newFieldErrors[key] = String(value);
+            }
+          });
+
+          setFieldErrors(newFieldErrors);
+
+          // If we have field errors, scrollTo relevant section
+          if (inquiryRes.error.fields.phoneNumber || inquiryRes.error.fields.email) {
+            setTimeout(() => scrollToSection(contactSectionRef), 100);
+          }
+          if (inquiryRes.error.fields.promoCode) {
+            setTimeout(() => scrollToSection(promoSectionRef), 100);
+          }
+        }
+
+        switch (errorCode) {
+          case 'BAD_REQUEST':
+            errorMessage = language === 'id' ? 'Request tidak valid.' : 'Invalid request.';
+            break;
+          case 'VALIDATION_ERROR':
+            errorMessage = language === 'id' ? 'Validasi gagal. Mohon periksa field yang ditandai merah.' : 'Validation failed. Please check the highlighted fields.';
+            // Specific overrides for top-level message if needed
+            if (inquiryRes.error.fields?.productCode) errorMessage = language === 'id' ? 'Kode produk wajib diisi.' : 'Product code is required.';
+            if (inquiryRes.error.fields?.skuCode) errorMessage = language === 'id' ? 'Kode SKU wajib diisi.' : 'SKU code is required.';
+            if (inquiryRes.error.fields?.zoneId || inquiryRes.error.fields?.serverId) errorMessage = language === 'id' ? 'User ID / Server ID wajib diisi.' : 'User ID / Server ID is required.';
+            break;
+          case 'PRODUCT_NOT_FOUND':
+            errorMessage = language === 'id' ? 'Produk tidak ditemukan atau tidak aktif.' : 'Product not found or inactive.';
+            break;
+          case 'SKU_NOT_FOUND':
+            errorMessage = language === 'id' ? 'Item tidak ditemukan atau tidak aktif.' : 'SKU not found or inactive.';
+            break;
+          case 'ACCOUNT_NOT_FOUND':
+            errorMessage = language === 'id' ? 'Akun tidak ditemukan. Periksa ID/Server ID Anda.' : 'Account not found. Check your ID/Server ID.';
+            break;
+          case 'INQUIRY_SERVICE_ERROR':
+          case 'INQUIRY_RESPONSE_ERROR':
+            errorMessage = language === 'id' ? 'Gagal terhubung ke layanan penyedia. Silakan coba lagi nanti.' : 'Failed to connect to provider service. Please try again later.';
+            break;
+          case 'INTERNAL_ERROR':
+            errorMessage = language === 'id' ? 'Terjadi kesalahan sistem.' : 'System error.';
+            break;
+          // Promo & Payment errors (handled similarly as validation/logic)
+          case 'PAYMENT_NOT_FOUND':
+          case 'PAYMENT_NOT_ACTIVE':
+            errorMessage = language === 'id' ? 'Metode pembayaran tidak valid/aktif.' : 'Invalid or inactive payment method.';
+            break;
+        }
+
+        // Global Toast Error
+        toast.error(errorMessage);
+
+        setOrderError(errorMessage);
         setIsOrdering(false);
         return;
       }
@@ -696,6 +1012,7 @@ export default function ProductDetailPage() {
           console.log('Order inquiry success! Setting data and showing modal...');
           console.log('Order inquiry data to set:', orderData);
           setOrderInquiryData(orderData);
+          setAgreedToTerms(true);
           console.log('Setting showConfirmModal to true');
           setShowConfirmModal(true);
           console.log('Modal should now be visible');
@@ -723,6 +1040,7 @@ export default function ProductDetailPage() {
 
     setIsOrdering(true);
     setOrderError('');
+    setCreateOrderError('');
 
     try {
       // Create actual order
@@ -732,19 +1050,69 @@ export default function ProductDetailPage() {
       );
 
       if (orderRes.error) {
-        setOrderError(orderRes.error.message);
-        setShowConfirmModal(false);
+        console.error('Create order error:', orderRes.error);
+
+        const errorCode = orderRes.error.code;
+        let errorMessage = orderRes.error.message;
+
+        switch (errorCode) {
+          case 'BAD_REQUEST':
+            errorMessage = language === 'id' ? 'Request tidak valid.' : 'Invalid request.';
+            break;
+          case 'VALIDATION_ERROR':
+            errorMessage = language === 'id' ? 'Validasi gagal.' : 'Validation failed.';
+            break;
+          case 'INVALID_TOKEN':
+          case 'TOKEN_ALREADY_USED':
+            errorMessage = language === 'id' ? 'Sesi transaksi berakhir/kadaluarsa. Silakan buat pesanan baru.' : 'Transaction session expired. Please create a new order.';
+            break;
+          case 'PRODUCT_NOT_FOUND':
+            errorMessage = language === 'id' ? 'Produk tidak tersedia.' : 'Product not available.';
+            break;
+          case 'SKU_NOT_FOUND':
+            errorMessage = language === 'id' ? 'Item tidak ditemukan.' : 'Item not found.';
+            break;
+          case 'PAYMENT_CHANNEL_NOT_FOUND':
+            errorMessage = language === 'id' ? 'Metode pembayaran tidak tersedia.' : 'Payment method not available.';
+            break;
+          case 'AUTHENTICATION_REQUIRED':
+            errorMessage = language === 'id' ? 'Silakan login terlebih dahulu.' : 'Please login first.';
+            break;
+          case 'INSUFFICIENT_BALANCE':
+            errorMessage = language === 'id' ? 'Saldo tidak mencukupi.' : 'Insufficient balance.';
+            break;
+          case 'PAYMENT_GATEWAY_UNAVAILABLE':
+          case 'PAYMENT_GATEWAY_ERROR':
+            errorMessage = language === 'id' ? 'Layanan pembayaran sedang gangguan. Silakan coba metode lain.' : 'Payment service is unavailable. Please try another method.';
+            break;
+          case 'INTERNAL_ERROR':
+            errorMessage = language === 'id' ? 'Terjadi kesalahan sistem.' : 'System error.';
+            break;
+        }
+
+        setCreateOrderError(errorMessage);
+        // Do NOT close modal, let modal show the error
+        // setShowConfirmModal(false); 
+        setIsOrdering(false);
         return;
       }
 
-      if (orderRes.data?.order) {
+      if (orderRes.data) {
+        // Save to local history
+        try {
+          const ord = orderRes.data;
+          saveLocalTransaction(regionCode, ord);
+        } catch (e) {
+          console.error('Failed to save local transaction', e);
+        }
+
         // Add product to favorites
         if (product) {
           addToFavorites(product.code);
         }
         // Close modal and redirect to payment page
         setShowConfirmModal(false);
-        router.push(getLocalizedPath(`/invoice/${orderRes.data.order.invoiceNumber}`));
+        router.push(getLocalizedPath(`/invoice/${orderRes.data.invoiceNumber}`));
       }
     } catch (error) {
       console.error('Order error:', error);
@@ -775,7 +1143,7 @@ export default function ProductDetailPage() {
     );
   }
 
-  const subtotal = selectedSKU?.price || 0;
+  const subtotal = (selectedSKU?.price || 0) * quantity;
   const paymentFee = selectedPayment
     ? selectedPayment.feeAmount + (subtotal * selectedPayment.feePercentage) / 100
     : 0;
@@ -852,25 +1220,102 @@ export default function ProductDetailPage() {
                 {fields.length > 0 ? (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {fields.map((field) => (
-                        <Input
-                          key={field.key}
-                          label={field.name}
-                          type={field.type === 'number' ? 'text' : field.type}
-                          inputMode={field.type === 'number' ? 'numeric' : undefined}
-                          value={fieldValues[field.key] || ''}
-                          onChange={(e) => {
-                            setFieldValues((prev) => ({
-                              ...prev,
-                              [field.key]: e.target.value,
-                            }));
-                            setAccountData(null);
-                          }}
-                          onBlur={handleValidateAccount}
-                          placeholder={field.placeholder}
-                          hint={field.hint}
-                          required={field.required}
-                        />
+                      {fields.map((field, index) => (
+                        <div key={field.key} className="relative">
+                          <Input
+                            label={field.name}
+                            type={field.type === 'number' ? 'text' : field.type}
+                            inputMode={field.type === 'number' ? 'numeric' : undefined}
+                            value={fieldValues[field.key] || ''}
+                            onChange={(e) => {
+                              let value = e.target.value;
+                              if (field.type === 'number') {
+                                value = value.replace(/[^0-9]/g, '');
+                              }
+                              if (field.maxLength && value.length > field.maxLength) {
+                                return;
+                              }
+                              setFieldValues((prev) => ({
+                                ...prev,
+                                [field.key]: value,
+                              }));
+                              setAccountData(null);
+                            }}
+                            onFocus={() => {
+                              setFocusedField(field.key);
+                              if (index === 0) setShowRecentAccounts(true);
+                            }}
+                            onBlur={(e) => {
+                              // Delay hiding to allow click event on dropdown
+                              setTimeout(() => {
+                                setFocusedField(null);
+                                setShowRecentAccounts(false);
+                              }, 200);
+                              handleValidateAccount();
+                            }}
+                            placeholder={field.placeholder}
+                            hint={field.hint}
+                            required={field.required}
+                            maxLength={field.maxLength || undefined}
+                            minLength={field.minLength || undefined}
+                            className={index === 0 && recentAccounts.length > 0 ? "border-b-0 rounded-b-none focus:border-b-0 active:border-b-0" : ""}
+                          />
+
+                          {/* Recent Accounts Dropdown */}
+                          {index === 0 && showRecentAccounts && recentAccounts.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-t-0 border-gray-200 dark:border-gray-700 rounded-b-xl shadow-lg z-50 max-h-60 overflow-y-auto">
+                              <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700/50 text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                <History className="w-3 h-3" />
+                                {language === 'id' ? 'Akun Terakhir' : 'Recent Accounts'}
+                              </div>
+                              {recentAccounts.map((acc, i) => (
+                                <button
+                                  key={i}
+                                  type="button"
+                                  onMouseDown={(e) => {
+                                    e.preventDefault(); // Prevent blur
+                                    // Auto fill
+                                    const newValues = { ...fieldValues };
+
+                                    // Map inputs to fields:
+                                    // 1. By ID match if possible? No, user generic labels "id" and "server"
+                                    // Strategy: 
+                                    // - Label 'id' -> First field (usually user ID)
+                                    // - Label 'server' -> Second field (usually Zone ID)
+
+                                    const idInput = acc.inputs.find(inp => inp.label === 'id');
+                                    const serverInput = acc.inputs.find(inp => inp.label === 'server');
+
+                                    if (idInput && fields[0]) newValues[fields[0].key] = idInput.value;
+                                    if (serverInput && fields[1]) newValues[fields[1].key] = serverInput.value;
+
+                                    setFieldValues(newValues);
+                                    setShowRecentAccounts(false);
+                                    // Trigger validation manually after a short delay to ensure state update
+                                    setTimeout(() => handleValidateAccount(), 100);
+                                  }}
+                                  className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b last:border-0 border-gray-100 dark:border-gray-700 group"
+                                >
+                                  <div className="flex justify-between items-center">
+                                    <div>
+                                      <p className="font-bold text-gray-900 dark:text-white text-sm group-hover:text-primary-600 transition-colors">
+                                        {acc.nickname || 'Unknown'}
+                                      </p>
+                                      <p className="text-xs text-gray-500 font-mono mt-0.5">
+                                        {acc.inputs.map(inp => inp.value).join(' ')}
+                                      </p>
+                                    </div>
+                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <span className="text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-600 px-2 py-0.5 rounded-full">
+                                        {language === 'id' ? 'Pilih' : 'Select'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
                     {isValidating && (
@@ -880,7 +1325,12 @@ export default function ProductDetailPage() {
                       </div>
                     )}
                     {accountError && (
-                      <p className="text-sm text-red-500 font-medium animate-pulse">{accountError}</p>
+                      <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-xl animate-shake">
+                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                        <p className="text-sm text-red-600 dark:text-red-400 font-medium leading-tight">
+                          {accountError}
+                        </p>
+                      </div>
                     )}
                     {accountData && (
                       <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl animate-in fade-in duration-500">
@@ -891,12 +1341,9 @@ export default function ProductDetailPage() {
                             </svg>
                           </div>
                           <span className="text-sm font-bold text-green-700 dark:text-green-300">
-                            Akun Valid: {accountData.account.nickname}
+                            {accountData.account.nickname}
                           </span>
                         </div>
-                        <p className="text-xs text-green-600 dark:text-green-400 pl-7">
-                          Region: {accountData.account.region} | ID: {accountData.product.code}
-                        </p>
                       </div>
                     )}
                   </div>
@@ -928,7 +1375,7 @@ export default function ProductDetailPage() {
                         : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
                     )}
                   >
-                    Semua Item
+                    {language === 'id' ? 'Semua Item' : 'All Items'}
                   </button>
                   {sections.map((section) => (
                     <button
@@ -990,15 +1437,66 @@ export default function ProductDetailPage() {
               </StepSection>
             </div>
 
-            {/* 3. Payment Methods */}
+            {/* 3. Quantity */}
+            <div ref={quantitySectionRef}>
+              <StepSection
+                title={language === 'id' ? 'Masukkan Jumlah' : 'Enter Quantity'}
+                number="3"
+                isActive={!!selectedSKU}
+                isCompleted={true}
+              >
+                {/* Quantity Input */}
+                <div className="mb-2">
+                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">
+                    {language === 'id' ? 'Jumlah' : 'Quantity'}
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-800 w-fit">
+                      <button
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="w-10 h-10 flex items-center justify-center bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border-r border-gray-300 dark:border-gray-600"
+                        disabled={quantity <= 1}
+                      >
+                        <Minus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                      </button>
+                      <input
+                        type="text"
+                        value={quantity}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '');
+                          let num = parseInt(val);
+                          if (isNaN(num)) num = 0; // Allow clear, but set to 1 on blur if needed or handle logic
+                          setQuantity(num);
+                        }}
+                        onBlur={() => {
+                          if (quantity < 1) setQuantity(1);
+                          if (quantity > 5) setQuantity(5);
+                        }}
+                        className="w-12 h-10 text-center text-sm font-bold text-gray-900 dark:text-white bg-transparent focus:outline-none"
+                      />
+                      <button
+                        onClick={() => setQuantity(Math.min(5, quantity + 1))}
+                        className="w-10 h-10 flex items-center justify-center bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border-l border-gray-300 dark:border-gray-600"
+                        disabled={quantity >= 5}
+                      >
+                        <Plus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </StepSection>
+            </div>
+
+            {/* 4. Payment Methods */}
             <div ref={paymentSectionRef}>
               <StepSection
                 title={`${t('selectPayment')} *`}
-                number="3"
+                number="4"
                 isActive={!!selectedSKU}
                 isCompleted={!!selectedPayment}
               // Locked removed
               >
+
                 <div className={cn(
                   "space-y-3 transition-opacity duration-300",
                   "opacity-100" // Always visible opacity, validation on click
@@ -1013,15 +1511,101 @@ export default function ProductDetailPage() {
                     return channelsWithoutCategory.map((channel) => {
                       const isSelected = selectedPayment?.code === channel.code;
 
+                      // Payment Availability Logic
+                      const amount = (selectedSKU?.price || 0) * quantity;
+                      const fee = channel.feeAmount + (amount * channel.feePercentage) / 100;
+                      const totalWithFee = amount + fee;
+
+                      // BALANCE Logic
+                      const isBalance = channel.code === 'BALANCE';
+                      let isDisabled = false;
+                      let statusLabel = null;
+                      let balanceAmount = 0;
+                      const isLoggedIn = !!user;
+
+                      if (isBalance) {
+                        if (!isLoggedIn) {
+                          isDisabled = true;
+                          statusLabel = (
+                            <div className="mt-1 w-full flex justify-end">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs px-3"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push(getLocalizedPath('/login'));
+                                }}
+                              >
+                                Login
+                              </Button>
+                            </div>
+                          );
+                        } else if (user) {
+                          // Check balance
+                          balanceAmount = user.balance?.[currency as keyof typeof user.balance] || 0;
+                          if (balanceAmount < totalWithFee) {
+                            isDisabled = true;
+                            statusLabel = (
+                              <span className="text-[10px] text-red-500 font-bold mt-1">
+                                Saldo Kurang ({formatCurrency(balanceAmount, currency)})
+                              </span>
+                            );
+                          } else {
+                            statusLabel = (
+                              <span className="text-[10px] text-green-600 font-medium mt-1">
+                                Saldo: {formatCurrency(balanceAmount, currency)}
+                              </span>
+                            );
+                          }
+                        }
+                      } else {
+                        const isAvailable = amount > 0 ? (totalWithFee >= channel.minAmount && totalWithFee <= channel.maxAmount) : true;
+
+                        // Default Status Label Logic
+                        if (amount === 0) {
+                          // No SKU selected -> Show Min Amount
+                          statusLabel = (
+                            <span className="text-[10px] text-gray-500 font-medium mt-1">
+                              Min Rp {channel.minAmount.toLocaleString('id-ID')}
+                            </span>
+                          );
+                        } else if (!isAvailable) {
+                          isDisabled = true;
+                          statusLabel = (
+                            <span className="text-[10px] text-red-500 font-medium mt-1">
+                              {totalWithFee < channel.minAmount
+                                ? `Min Rp ${channel.minAmount.toLocaleString('id-ID')}`
+                                : `Max Rp ${channel.maxAmount.toLocaleString('id-ID')}`}
+                            </span>
+                          );
+                        } else {
+                          // Valid and available -> Show Price + Admin Fee
+                          statusLabel = (
+                            <span className="text-[10px] text-gray-500 font-medium mt-1">
+                              {formatCurrency(Math.round(totalWithFee), currency)}
+                            </span>
+                          );
+                        }
+                      }
+
+                      // Determine effective availability for styling only (logic handled above)
+                      // If it's balance and logged out, we style slightly differently
+                      const isClickable = !isDisabled;
+
                       return (
                         <button
                           key={channel.code}
-                          onClick={() => handleSelectPayment(channel)}
+                          onClick={() => isClickable && handleSelectPayment(channel)}
+                          disabled={isDisabled && !(!isLoggedIn && isBalance)} // Allow click if login needed
                           className={cn(
-                            'flex items-center gap-3 w-full px-4 py-3 rounded-xl border-2 transition-all text-left',
+                            'flex items-center gap-3 w-full px-4 py-3 rounded-xl border-2 transition-all text-left relative',
                             isSelected
-                              ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md ring-1 ring-primary-500'
-                              : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'
+                              ? 'border-primary-500 bg-white dark:bg-gray-800 shadow-md ring-1 ring-primary-500'
+                              : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800',
+                            isDisabled && !(isBalance && !isLoggedIn)
+                              ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50'
+                              : 'hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer'
                           )}
                         >
                           <Image
@@ -1029,13 +1613,17 @@ export default function ProductDetailPage() {
                             alt={channel.name}
                             width={48}
                             height={32}
-                            className="h-8 w-auto object-contain"
+                            className={cn("h-8 w-auto object-contain", isDisabled && !(isBalance && !isLoggedIn) && "grayscale")}
                           />
-                          <span className="font-medium text-gray-900 dark:text-white">
-                            {channel.name}
-                          </span>
+                          <div className="flex flex-col flex-1">
+                            <span className="font-medium text-gray-900 dark:text-white">
+                              {channel.name}
+                            </span>
+                            {statusLabel}
+                          </div>
+
                           {isSelected && (
-                            <div className="ml-auto w-5 h-5 bg-primary-500 rounded-full flex items-center justify-center">
+                            <div className="ml-auto w-5 h-5 bg-primary-500 rounded-full flex items-center justify-center shrink-0">
                               <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                               </svg>
@@ -1060,99 +1648,171 @@ export default function ProductDetailPage() {
                           expandedPayment === category.code ? '' : category.code
                         )
                       }
-                      amount={selectedSKU?.price || 0}
+                      amount={subtotal} // Pass subtotal (price * quantity)
                       currency={currency}
+                      user={user}
+                      isLoggedIn={!!user}
+                      onLogin={() => router.push(getLocalizedPath('/login'))}
+                      locale={language}
                     />
                   ))}
                 </div>
               </StepSection>
             </div>
 
-            {/* 4. Contact Info */}
-            {/* 4. Contact Info & Promo Code */}
+            {/* 5. Contact Info */}
+            {/* 5. Contact Info & Promo Code */}
             <div ref={contactSectionRef} className="space-y-6">
               <StepSection
                 title={`${t('contactInfo') || 'Kontak Saya'} *`}
-                number="4"
+                number="5"
                 isActive={!!selectedPayment}
                 isCompleted={Boolean(contactInfo.phoneNumber)}
                 disabled={false} // Always meaningful to be editable
               >
                 <div className="space-y-4">
                   <PhoneInput
-                    label="Nomor Whatsapp (Wajib)"
+                    label={language === 'id'
+                      ? 'Nomor Whatsapp'
+                      : 'Whatsapp Number'}
                     value={contactInfo.phoneNumber}
-                    onChange={(value) =>
-                      setContactInfo((prev) => ({ ...prev, phoneNumber: value }))
-                    }
+                    onChange={(value) => {
+                      setContactInfo((prev) => ({ ...prev, phoneNumber: value }));
+                      setFieldErrors((prev) => ({ ...prev, phoneNumber: '' }));
+                    }}
                     defaultCountryCode={regionCode === 'MY' ? '+60' : regionCode === 'PH' ? '+63' : regionCode === 'SG' ? '+65' : regionCode === 'TH' ? '+66' : '+62'}
                     required
+                    error={fieldErrors.phoneNumber}
                   />
-                  <Input
-                    label="Email (Opsional)"
-                    type="email"
-                    value={contactInfo.email}
-                    onChange={(e) =>
-                      setContactInfo((prev) => ({ ...prev, email: e.target.value }))
-                    }
-                    placeholder="Kirim bukti pembayaran ke email..."
-                  />
-                  <p className="text-xs text-gray-500">*Bukti pembayaran akan dikirimkan ke nomor Whatsapp dan Email kamu.</p>
+                  {/* Email Dropdown (Replaces Input for Manual Proof) */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                      Email
+                    </label>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowEmail(!showEmail)}
+                        className={cn(
+                          "w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all text-sm font-medium",
+                          showEmail
+                            ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20 ring-1 ring-primary-500 text-primary-900 dark:text-primary-100"
+                            : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 text-gray-700 dark:text-gray-300"
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Mail className={cn("w-4 h-4", showEmail ? "text-primary-500" : "text-gray-400")} />
+                          <span>{language === 'id' ? 'Kirim Bukti Pembayaran' : 'Send Payment Proof'}</span>
+                        </div>
+                        <ChevronDown className={cn("w-4 h-4 transition-transform text-gray-400", showEmail && "rotate-180 text-primary-500")} />
+                      </button>
+
+                      <AnimatePresence>
+                        {showEmail && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="absolute top-full left-0 right-0 mt-2 z-30 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-4"
+                          >
+                            <Input
+                              label="Email Address"
+                              type="email"
+                              value={contactInfo.email}
+                              className={fieldErrors.email ? "!border-red-500 focus:!ring-red-500" : "bg-gray-50 dark:bg-gray-900/50"}
+                              onChange={(e) => {
+                                setContactInfo((prev) => ({ ...prev, email: e.target.value }));
+                                setFieldErrors((prev) => ({ ...prev, email: '' }));
+                              }}
+                            />
+                            {fieldErrors.email && (
+                              <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">{fieldErrors.email}</p>
+                            )}
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
+                              {language === 'id'
+                                ? 'Bukti pembayaran akan dikirimkan ke email ini.'
+                                : 'Payment proof will be sent to this email.'}
+                            </p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      {/* Error outside (when collapsed) */}
+                      {!showEmail && fieldErrors.email && (
+                        <p className="text-xs text-red-600 dark:text-red-400 mt-1.5 font-medium px-1">
+                          {fieldErrors.email}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
+                    {language === 'id'
+                      ? 'Bukti pembayaran akan dikirimkan ke email ini.'
+                      : 'Payment proof will be sent to this email.'}
+                  </p>
                 </div>
               </StepSection>
 
-              {/* 5. Promo Code */}
-              <StepSection
-                title="Kode Promo"
-                number="5"
-                isActive={true}
-                disabled={false}
-              >
-                <div className="space-y-3">
-                  <Input
-                    value={promoCode}
-                    onChange={(e) => {
-                      setPromoCode(e.target.value.toUpperCase());
-                      setPromoError('');
-                      setPromoDiscount(0);
-                    }}
-                    placeholder="Punya kode promo? Masukkan disini"
-                  />
-                  {promoError && (
-                    <p className="text-sm text-red-500">{promoError}</p>
-                  )}
-                  {promoDiscount > 0 && (
-                    <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-2 rounded-lg border border-green-200">
-                      <Tag className="w-4 h-4" />
-                      ✓ Hemat {formatCurrency(promoDiscount, currency)}
-                    </div>
-                  )}
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={handleValidatePromo}
-                      disabled={!promoCode.trim() || isValidatingPromo}
-                      className="flex-1"
-                    >
-                      {isValidatingPromo ? t('loading') : 'Gunakan'}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="flex-1 text-primary-600 hover:bg-primary-50"
-                      onClick={() => {
-                        if (!canOrder) {
-                          toast.error(language === 'id' ? 'Lengkapi semua data diatas terlebih dahulu!' : 'Please complete all data above first!');
-                          return;
-                        }
-                        setShowPromoModal(true);
+              {/* 6. Promo Code */}
+              <div ref={promoSectionRef}>
+                <StepSection
+                  title={language === 'id' ? 'Kode Promo' : 'Promo Code'}
+                  number="6"
+                  isActive={true}
+                  disabled={false}
+                >
+                  <div className="space-y-3">
+                    <Input
+                      value={promoCode}
+                      onChange={(e) => {
+                        setPromoCode(e.target.value.toUpperCase());
+                        setPromoError('');
+                        setPromoDiscount(0);
                       }}
-                    >
-                      <Tag className="w-4 h-4 mr-2" />
-                      Cari Promo
-                    </Button>
+                      placeholder={language === 'id' ? 'Masukkan kode promo' : 'Enter promo code'}
+                      leftIcon={<Tag className="w-5 h-5" />}
+                      className={promoError ? "!border-red-500 focus:!ring-red-500" : ""}
+                    />
+                    {promoError && (
+                      <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-xl animate-shake">
+                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                        <p className="text-sm text-red-600 dark:text-red-400 font-medium leading-tight">
+                          {promoError}
+                        </p>
+                      </div>
+                    )}
+                    {promoDiscount > 0 && (
+                      <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-2 rounded-lg border border-green-200">
+                        <Tag className="w-4 h-4" />
+                        ✓ {language === 'id' ? 'Hemat' : 'Save'} {formatCurrency(promoDiscount, currency)}
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={handleValidatePromo}
+                        disabled={!promoCode.trim() || isValidatingPromo}
+                        className="flex-1"
+                      >
+                        {isValidatingPromo ? t('loading') : (language === 'id' ? 'Gunakan' : 'Apply')}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="flex-1 text-primary-600 hover:bg-primary-50"
+                        onClick={() => {
+                          if (!canOrder) {
+                            toast.error(language === 'id' ? 'Lengkapi semua data diatas terlebih dahulu!' : 'Please complete all data above first!');
+                            return;
+                          }
+                          setShowPromoModal(true);
+                        }}
+                      >
+                        <Tag className="w-4 h-4 mr-2" />
+                        {language === 'id' ? 'Cari Promo' : 'Find Promo'}
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </StepSection>
+                </StepSection>
+              </div>
             </div>
           </div>
 
@@ -1169,6 +1829,7 @@ export default function ProductDetailPage() {
               isLoading={isOrdering}
               orderError={orderError}
               onOrder={handleOrder}
+              quantity={quantity}
             />
           </div>
         </div>
@@ -1210,8 +1871,18 @@ export default function ProductDetailPage() {
 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
+                    <span className="text-gray-500">Metode</span>
+                    <span className="font-medium text-gray-900 dark:text-white truncate max-w-[200px] text-right">
+                      {selectedPayment?.name || '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-gray-500">Harga</span>
                     <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(subtotal, currency)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Jumlah</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{quantity}x</span>
                   </div>
                   {paymentFee > 0 && (
                     <div className="flex justify-between">
@@ -1281,9 +1952,15 @@ export default function ProductDetailPage() {
         orderData={orderInquiryData}
         product={product}
         locale={language}
+        currency={currency}
         isLoading={isOrdering}
         agreedToTerms={agreedToTerms}
         onAgreeToTerms={setAgreedToTerms}
+        error={createOrderError}
+        quantity={quantity}
+        paymentFee={paymentFee}
+        promoDiscount={promoDiscount}
+        paymentMethodName={selectedPayment?.name}
       />
 
       {/* Promo Modal */}
@@ -1293,6 +1970,7 @@ export default function ProductDetailPage() {
         promos={availablePromos}
         isLoading={isLoadingPromos}
         currency={currency}
+        locale={language}
         onSelectPromo={handleSelectPromo}
       />
     </MainLayout>

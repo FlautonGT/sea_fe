@@ -111,7 +111,7 @@ export const AnimatedProcessing = ({ className, size = 48, color = 'currentColor
 export const AnimatedPending = ({ className, size = 48, color = 'currentColor' }: IconProps) => {
   return (
     <div className={`relative flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
-       {/* Card outline */}
+      {/* Card outline */}
       <svg
         width={size}
         height={size}
@@ -125,13 +125,13 @@ export const AnimatedPending = ({ className, size = 48, color = 'currentColor' }
         <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
         <line x1="1" y1="10" x2="23" y2="10" />
       </svg>
-      
+
       {/* Scan line */}
       <motion.div
         className="absolute left-[10%] w-[80%] bg-current opacity-50"
-        style={{ 
-            height: 2, 
-            backgroundColor: color 
+        style={{
+          height: 2,
+          backgroundColor: color
         }}
         animate={{
           top: ['30%', '70%', '30%'],
@@ -196,6 +196,112 @@ export const AnimatedFailed = ({ className, size = 48, color = 'currentColor' }:
               opacity: { delay: 0.5, duration: 0.01 },
             },
           },
+        }}
+      />
+    </motion.svg>
+  );
+};
+
+// --- Expired Icon (Animated Clock) ---
+export const AnimatedExpired = ({ className, size = 48, color = 'currentColor' }: IconProps) => {
+  return (
+    <motion.svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.circle
+        cx="12"
+        cy="12"
+        r="10"
+        variants={{
+          hidden: { pathLength: 0, opacity: 0 },
+          visible: {
+            pathLength: 1,
+            opacity: 1,
+            transition: { duration: 1, ease: "easeInOut" }
+          }
+        }}
+      />
+      <motion.polyline
+        points="12 6 12 12 16 14"
+        variants={{
+          hidden: { pathLength: 0, opacity: 0 },
+          visible: {
+            pathLength: 1,
+            opacity: 1,
+            transition: { delay: 0.5, duration: 1, ease: "easeInOut" }
+          }
+        }}
+      />
+    </motion.svg>
+  );
+};
+
+// --- Refunded Icon (Animated Undo/Return) ---
+export const AnimatedRefunded = ({ className, size = 48, color = 'currentColor' }: IconProps) => {
+  return (
+    <motion.svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      initial="hidden"
+      animate="visible"
+    >
+      {/* Circle Arrow */}
+      <motion.path
+        d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+        variants={{
+          hidden: { pathLength: 0, opacity: 0 },
+          visible: {
+            pathLength: 1,
+            opacity: 1,
+            transition: { duration: 1.5, ease: "easeInOut" }
+          }
+        }}
+      />
+      <motion.path
+        d="M3 3v5h5"
+        variants={{
+          hidden: { pathLength: 0, opacity: 0 },
+          visible: {
+            pathLength: 1,
+            opacity: 1,
+            transition: { delay: 1, duration: 0.5, ease: "easeInOut" }
+          }
+        }}
+      />
+      {/* Dollar Sign inside */}
+      <motion.path
+        d="M12 7v10"
+        strokeWidth={1.5}
+        variants={{
+          hidden: { opacity: 0, y: 5 },
+          visible: { opacity: 1, y: 0, transition: { delay: 1.5, duration: 0.5 } }
+        }}
+      />
+      <motion.path
+        d="M14 9h-3a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4h-3"
+        strokeWidth={1.5}
+        variants={{
+          hidden: { pathLength: 0, opacity: 0 },
+          visible: { pathLength: 1, opacity: 1, transition: { delay: 1.5, duration: 0.5 } }
         }}
       />
     </motion.svg>

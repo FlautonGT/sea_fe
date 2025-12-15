@@ -102,31 +102,34 @@ export default function ProductCard({
     <Link
       href={href}
       className={cn(
-        "product-card block",
+        "product-card block group h-full relative bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300",
         className
       )}
     >
-      <div className="product-card-image">
+      <div className="product-card-image relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700">
         <Image
           src={product.thumbnail}
           alt={product.title}
           fill
-          className="object-cover"
+          className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
+        {/* Overlay on hover - Subtle gloss effect only */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
         {product.isPopular && (
-          <div className="absolute top-2 left-2">
-            <span className="px-2 py-0.5 bg-orange-500 text-white text-xs font-semibold rounded-full">
+          <div className="absolute top-2 left-2 z-10">
+            <span className="px-2 py-0.5 bg-orange-500/90 backdrop-blur-sm text-white text-[10px] font-bold rounded-full shadow-sm">
               🔥 Hot
             </span>
           </div>
         )}
       </div>
       <div className="p-3">
-        <h3 className="font-medium text-sm text-gray-900 dark:text-white line-clamp-1">
+        <h3 className="font-semibold text-sm text-gray-900 dark:text-white line-clamp-1 group-hover:text-primary-600 transition-colors">
           {product.title}
         </h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">
-          {product.publisher}
+        <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+          {product.publisher || 'Direct Top Up'}
         </p>
       </div>
     </Link>

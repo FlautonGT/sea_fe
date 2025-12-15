@@ -251,67 +251,108 @@ export interface OrderInquiry {
   };
 }
 
+// Deposit Inquiry Response
+export interface DepositInquiry {
+  validationToken: string;
+  expiresAt: string;
+  deposit: {
+    amount: number;
+    pricing: {
+      subtotal: number;
+      paymentFee: number;
+      total: number;
+      currency: string;
+    };
+    payment: {
+      code: string;
+      name: string;
+      currency: string;
+      minAmount: number;
+      maxAmount: number;
+      feeAmount: number;
+      feePercentage: number;
+    };
+  };
+}
+
 // Order
 export interface Order {
-  invoiceNumber: string;
-  status: 'PENDING' | 'PAID' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | 'EXPIRED' | 'CANCELLED';
-  paymentStatus?: 'UNPAID' | 'PAID' | 'EXPIRED' | 'REFUNDED';
-  productCode: string;
-  productName: string;
-  skuCode: string;
-  skuName: string;
-  quantity: number;
   account: {
     nickname: string;
-    userId?: string;
+    userId: string;
     zoneId?: string;
     inputs?: string;
   };
-  pricing: {
-    subtotal: number;
-    discount: number;
-    paymentFee: number;
-    total: number;
-    currency: string;
+  contact: {
+    phoneNumber: string;
+    email?: string;
   };
+  createdAt: string;
+  expiredAt: string;
+  invoiceNumber: string;
+  paidAt?: string;
+  completedAt?: string; // Kept for compatibility if needed, though not in new JSON
   payment: {
     code: string;
+    expiredAt: string;
+    image: string;
     name: string;
-    categoryCode?: string; // VIRTUAL_ACCOUNT, E_WALLET, QRIS, RETAIL, CARD, BALANCE
+    paidAt?: string;
+
+    // New fields
+    paymentType?: 'QRIS' | 'E_WALLET' | 'VIRTUAL_ACCOUNT' | 'RETAIL';
+    paymentCode?: string; // Contains QR string, deeplink URL, VA number, or Retail payment code
+    instructions?: string[];
+    categoryCode?: string;
+
+    // Legacy fields that might still be needed or can be derived/optional
     instruction?: string;
-    // QRIS
     qrCode?: string;
     qrString?: string;
-    // Virtual Account
     accountNumber?: string;
     bankName?: string;
     accountName?: string;
-    // E-Wallet / Card
     redirectUrl?: string;
     deeplink?: string;
-    // Retail
     retailCode?: string;
     retailName?: string;
-    // Timing
-    expiredAt?: string;
-    paidAt?: string;
   };
-  promo?: {
+  pricing: {
+    currency: string;
+    discount: number;
+    paymentFee: number;
+    subtotal: number;
+    total: number;
+  };
+  product: {
     code: string;
-    discountAmount: number;
+    image: string; // New field
+    name: string; // New field
   };
-  contact: {
-    email: string;
-    phoneNumber: string;
+  quantity: number;
+  serialNumber?: string; // New field
+  sku: {
+    code: string;
+    image: string;
+    name: string;
   };
-  timeline?: {
-    status: string;
+  status: {
+    paymentStatus: 'UNPAID' | 'PAID' | 'EXPIRED' | 'REFUNDED' | 'FAILED';
+    transactionStatus: 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED';
+  };
+  timeline: {
     message: string;
+    status: string;
     timestamp: string;
   }[];
-  createdAt: string;
-  expiredAt: string;
-  completedAt?: string;
+
+  // Legacy flat fields to remove eventually or keep optional if referenced elsewhere temporarily
+  productCode?: string;
+  productName?: string;
+  skuCode?: string;
+  skuName?: string;
+  paymentStatus?: 'UNPAID' | 'PAID' | 'EXPIRED' | 'REFUNDED' | 'FAILED'; // Legacy flat
+  //   status: 'PENDING' | 'PAID' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | 'EXPIRED' | 'CANCELLED'; // Legacy flat - CONFLICT
 }
 
 // Invoice type currently follows Order structure as per docs usage on invoice page
@@ -383,11 +424,19 @@ export interface RegisterResponse {
 // Transaction
 export interface Transaction {
   invoiceNumber: string;
-  status: 'SUCCESS' | 'PROCESSING' | 'PENDING' | 'FAILED' | 'EXPIRED';
-  productCode: string;
-  productName: string;
-  skuCode: string;
-  skuName: string;
+  status: {
+    payment: 'UNPAID' | 'PAID' | 'EXPIRED' | 'REFUNDED' | 'FAILED';
+    transaction: 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED';
+  };
+  product: {
+    code: string;
+    name: string;
+  };
+  sku: {
+    code: string;
+    name: string;
+  };
+  quantity: number;
   account: {
     nickname: string;
     inputs: string;
@@ -459,31 +508,34 @@ export interface ReportOverview {
 
 // Deposit
 export interface Deposit {
+  id: string;
   invoiceNumber: string;
-  status: 'SUCCESS' | 'PENDING' | 'EXPIRED' | 'FAILED';
   amount: number;
-  pricing: {
-    subtotal: number;
-    paymentFee: number;
-    total: number;
-    currency: string;
-  };
+  paymentFee: number;
+  total: number;
+  currency: string;
+  status: 'SUCCESS' | 'PENDING' | 'EXPIRED' | 'FAILED';
   payment: {
     code: string;
     name: string;
-    instruction?: string;
-    qrCode?: string;
-    qrCodeImage?: string;
-    accountNumber?: string;
-    bankName?: string;
-    accountName?: string;
+    // Invoice details
+    paymentCode?: string;
+    qrString?: string;
+    instructions?: string[]; // Array of strings for instructions
+    instruction?: string; // Legacy single string
     redirectUrl?: string;
-    deeplink?: string;
+    accountNumber?: string;
+    paymentType?: string;
     expiredAt?: string;
+    image?: string;
   };
-  currency: string;
+  timeline?: {
+    status: string;
+    message: string;
+    timestamp: string;
+  }[];
   createdAt: string;
-  expiredAt?: string;
+  expiredAt: string;
   paidAt?: string;
 }
 

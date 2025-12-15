@@ -1127,8 +1127,7 @@ Validate promo code before order.
     "skuCode": "MLBB_172",
     "paymentCode": "QRIS",
     "region": "ID",
-    "userId": "656696292",
-    "zoneId": "8610"
+    "account": {/**input account sesuai fields yang dimasukkan dan key, contoh userId: "656696292" dan serverId: "8610"**/}
 }
 ```
 

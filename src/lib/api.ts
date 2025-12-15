@@ -65,6 +65,70 @@ async function fetchAPI<T>(
     });
 
     const json = await response.json();
+
+    // Check for Token Errors (INVALID_TOKEN or 401)
+    if (!response.ok) {
+      const errorCode = json?.error?.code;
+
+      // If error is INVALID_TOKEN and we haven't already retried (prevent infinite loop)
+      // We check for a special flag in options, or just check existence of token
+      if ((response.status === 401 || errorCode === 'INVALID_TOKEN' || errorCode === 'TOKEN_EXPIRED') && token) {
+        try {
+          // 1. Get Refresh Token from Session Storage
+          const storedTokenStr = sessionStorage.getItem('user_token');
+          if (!storedTokenStr) throw new Error('No refresh token available');
+
+          const storedToken = JSON.parse(storedTokenStr);
+          if (!storedToken.refreshToken) throw new Error('No refresh token in storage');
+
+          // 2. Call Refresh Endpoint
+          // We use a fresh fetch to avoid circular dependency or recursive interceptor loop issues
+          const refreshResponse = await fetch(`${API_BASE_URL}${API_VERSION}/auth/refresh-token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken: storedToken.refreshToken }),
+          });
+
+          const refreshJson = await refreshResponse.json();
+
+          if (refreshResponse.ok && refreshJson.data) {
+            const newAuthToken: AuthToken = refreshJson.data;
+
+            // 3. Update Session Storage
+            sessionStorage.setItem('user_token', JSON.stringify(newAuthToken));
+
+            // 4. Notify App (AuthContext)
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('auth:token-updated', { detail: newAuthToken }));
+            }
+
+            // 5. Retry Original Request with New Token
+            const newHeaders = { ...headers };
+            (newHeaders as Record<string, string>)['Authorization'] = `Bearer ${newAuthToken.accessToken}`;
+
+            const retryResponse = await fetch(`${API_BASE_URL}${API_VERSION}${endpoint}`, {
+              ...fetchOptions,
+              headers: newHeaders,
+            });
+
+            return await retryResponse.json();
+          } else {
+            // Refresh failed
+            throw new Error('Refresh failed');
+          }
+        } catch (refreshError) {
+          // If refresh fails, trigger logout
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('auth:logout'));
+          }
+          // Return original error to caller, or specific auth error
+          return json;
+        }
+      }
+      // If not auth error or refresh failed handled above
+      return json;
+    }
+
     return json;
   } catch (error) {
     return {
@@ -185,14 +249,19 @@ export async function getPromoCodes(
 }
 
 export async function validatePromoCode(
-  data: Record<string, string>
+  data: Record<string, unknown>
 ): Promise<
   ApiResponse<{
-    promoCode: string;
-    discountAmount: number;
-    originalAmount: number;
-    finalAmount: number;
-    promoDetails: {
+    // Failure (200 OK but logic invalid)
+    valid?: boolean;
+    reason?: string;
+
+    // Success
+    promoCode?: string;
+    discountAmount?: number;
+    originalAmount?: number;
+    finalAmount?: number;
+    promoDetails?: {
       title: string;
       promoPercentage: number;
       maxPromoAmount: number;
@@ -219,8 +288,8 @@ export async function createOrderInquiry(
 export async function createOrder(
   validationToken: string,
   token?: string
-): Promise<ApiResponse<{ step: string; order: Order }>> {
-  return fetchAPI<{ step: string; order: Order }>('/orders', {
+): Promise<ApiResponse<Order>> {
+  return fetchAPI<Order>('/orders', {
     method: 'POST',
     body: JSON.stringify({ validationToken }),
     token,
@@ -572,6 +641,10 @@ export async function createDepositInquiry(
     body: JSON.stringify(data),
     token,
   });
+}
+
+export async function getDepositInvoice(invoiceNumber: string, token: string): Promise<ApiResponse<Deposit>> {
+  return fetchAPI<Deposit>(`/deposits/invoices?invoiceNumber=${invoiceNumber}`, { token });
 }
 
 export async function createDeposit(

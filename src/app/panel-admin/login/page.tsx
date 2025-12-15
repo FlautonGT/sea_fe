@@ -104,8 +104,8 @@ export default function AdminLoginPage() {
                 type="submit"
                 disabled={isLoading}
                 className={cn(
-                  'w-full py-3 px-4 bg-primary text-white font-medium rounded-xl transition-all',
-                  'hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                  'w-full py-3 px-4 bg-primary-600 text-white font-medium rounded-xl transition-all',
+                  'hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2',
                   'disabled:opacity-50 disabled:cursor-not-allowed'
                 )}
               >
@@ -177,8 +177,8 @@ export default function AdminLoginPage() {
                 type="submit"
                 disabled={isLoading}
                 className={cn(
-                  'w-full py-3 px-4 bg-primary text-white font-medium rounded-xl transition-all',
-                  'hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                  'w-full py-3 px-4 bg-primary-600 text-white font-medium rounded-xl transition-all',
+                  'hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2',
                   'disabled:opacity-50 disabled:cursor-not-allowed'
                 )}
               >

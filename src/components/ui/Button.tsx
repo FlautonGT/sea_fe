@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'icon';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -48,6 +48,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       sm: 'px-3 py-1.5 text-sm gap-1.5',
       md: 'px-4 py-2.5 text-sm gap-2',
       lg: 'px-6 py-3 text-base gap-2',
+      icon: 'h-10 w-10 p-2',
     };
 
     return (
@@ -87,7 +88,7 @@ export default Button;
 interface LinkButtonProps {
   href: string;
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'icon';
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   fullWidth?: boolean;
@@ -124,6 +125,7 @@ export function LinkButton({
     sm: 'px-3 py-1.5 text-sm gap-1.5',
     md: 'px-4 py-2.5 text-sm gap-2',
     lg: 'px-6 py-3 text-base gap-2',
+    icon: 'h-10 w-10 p-2',
   };
 
   const combinedClassName = cn(

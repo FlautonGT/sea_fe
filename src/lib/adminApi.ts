@@ -36,9 +36,9 @@ const isBrowser = typeof window !== 'undefined';
 const clearAdminSession = () => {
   if (!isBrowser) return;
   try {
-    localStorage.removeItem(ADMIN_TOKEN_KEY);
-    localStorage.removeItem(ADMIN_REFRESH_TOKEN_KEY);
-    localStorage.removeItem(ADMIN_DATA_KEY);
+    sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+    sessionStorage.removeItem(ADMIN_REFRESH_TOKEN_KEY);
+    sessionStorage.removeItem(ADMIN_DATA_KEY);
   } catch (error) {
     console.error('[AdminAuth] Failed to clear session', error);
   }
@@ -58,10 +58,10 @@ const handleUnauthorized = (message?: string) => {
   throw error;
 };
 
-// Helper to get auth token from localStorage
+// Helper to get auth token from sessionStorage
 const getAuthToken = (): string | null => {
   if (!isBrowser) return null;
-  return localStorage.getItem(ADMIN_TOKEN_KEY);
+  return sessionStorage.getItem(ADMIN_TOKEN_KEY);
 };
 
 // Helper to make authenticated requests
@@ -94,7 +94,54 @@ async function adminFetch<T>(
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
     const errorCode = error?.error?.code;
+
+    // Check for Auth Errors
     if (response.status === 401 || AUTH_ERROR_CODES.has(errorCode)) {
+      // Attempt Refresh
+      try {
+        const refreshToken = sessionStorage.getItem(ADMIN_REFRESH_TOKEN_KEY);
+        if (!refreshToken) throw new Error('No refresh token');
+
+        // Call Refresh Endpoint (using fetch directly to avoid recursion)
+        const refreshResponse = await fetch(`${API_BASE_URL}${ADMIN_API_VERSION}/auth/refresh-token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        if (refreshResponse.ok) {
+          const refreshData = await refreshResponse.json();
+          const newTokens = refreshData.data; // { accessToken, refreshToken, ... }
+
+          if (newTokens?.accessToken) {
+            // Update Session
+            sessionStorage.setItem(ADMIN_TOKEN_KEY, newTokens.accessToken);
+            if (newTokens.refreshToken) {
+              sessionStorage.setItem(ADMIN_REFRESH_TOKEN_KEY, newTokens.refreshToken);
+            }
+
+            // Retry Original Request
+            const newHeaders = { ...headers };
+            (newHeaders as Record<string, string>)['Authorization'] = `Bearer ${newTokens.accessToken}`;
+
+            const retryResponse = await fetch(`${API_BASE_URL}${ADMIN_API_VERSION}${endpoint}`, {
+              ...options,
+              headers: newHeaders,
+            });
+
+            if (!retryResponse.ok) {
+              // Even with new token, it failed? Then propogate error
+              const retryError = await retryResponse.json().catch(() => ({}));
+              throw new Error(retryError?.error?.message || retryError?.message || 'Request failed after refresh');
+            }
+
+            return retryResponse.json();
+          }
+        }
+      } catch (refreshErr) {
+        // Refresh failed, proceed to logout
+      }
+
       handleUnauthorized(error?.error?.message || error?.message);
     }
     throw new Error(error?.error?.message || error?.message || 'Request failed');
@@ -369,6 +416,11 @@ export async function getTransactions(params?: {
   return response.data;
 }
 
+export async function getTransactionDetail(id: string): Promise<AdminTransaction> {
+  const response = await adminFetch<{ data: AdminTransaction }>(`/transactions/${id}`);
+  return response.data;
+}
+
 export async function getTransaction(transactionId: string): Promise<AdminTransaction> {
   const response = await adminFetch<{ data: AdminTransaction }>(`/transactions/${transactionId}`);
   return response.data;
@@ -410,7 +462,6 @@ export async function retryTransaction(transactionId: string, data: {
 }
 
 export async function manualTransaction(transactionId: string, data: {
-  status: 'SUCCESS' | 'FAILED';
   serialNumber?: string;
   reason: string;
 }): Promise<AdminTransaction> {

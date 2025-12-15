@@ -28,8 +28,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback((newToken: AuthToken, newUser: User) => {
     setToken(newToken);
     setUser(newUser);
-    setLocalStorage('auth_token', newToken);
-    setLocalStorage('user', newUser);
+    sessionStorage.setItem('user_token', JSON.stringify(newToken));
+    sessionStorage.setItem('user_data', JSON.stringify(newUser));
   }, []);
 
   const logout = useCallback(async () => {
@@ -42,64 +42,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setToken(null);
     setUser(null);
-    removeLocalStorage('auth_token');
-    removeLocalStorage('user');
+    sessionStorage.removeItem('user_token');
+    sessionStorage.removeItem('user_data');
   }, [token]);
 
   const updateUser = useCallback((updatedUser: User) => {
     setUser(updatedUser);
-    setLocalStorage('user', updatedUser);
+    sessionStorage.setItem('user_data', JSON.stringify(updatedUser));
   }, []);
 
   const refreshUser = useCallback(async () => {
     if (!token?.accessToken) return;
-    
+
     try {
       const response = await getUserProfile(token.accessToken);
       if (response.data) {
         setUser(response.data);
-        setLocalStorage('user', response.data);
+        sessionStorage.setItem('user_data', JSON.stringify(response.data));
       }
     } catch (error) {
       console.error('Failed to refresh user:', error);
     }
   }, [token]);
 
-  // Initialize auth state from localStorage
+  // Initialize auth state from sessionStorage
   useEffect(() => {
-    const storedToken = getLocalStorage<AuthToken | null>('auth_token', null);
-    const storedUser = getLocalStorage<User | null>('user', null);
+    try {
+      const storedToken = sessionStorage.getItem('user_token');
+      const storedUser = sessionStorage.getItem('user_data');
 
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(storedUser);
+      if (storedToken && storedUser) {
+        setToken(JSON.parse(storedToken));
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.error('Failed to load auth from session:', error);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
-  // Token refresh logic
+  // Listen for storage events or custom events from API interceptors
   useEffect(() => {
-    if (!token?.refreshToken || !token?.expiresIn) return;
+    const handleTokenUpdate = (event: CustomEvent<AuthToken>) => {
+      setToken(event.detail);
+      sessionStorage.setItem('user_token', JSON.stringify(event.detail));
+    };
 
-    const refreshTime = (token.expiresIn - 300) * 1000; // Refresh 5 minutes before expiry
-    
-    const timeoutId = setTimeout(async () => {
-      try {
-        const response = await refreshTokenAPI(token.refreshToken);
-        if (response.data) {
-          setToken(response.data);
-          setLocalStorage('auth_token', response.data);
-        } else {
-          await logout();
-        }
-      } catch (error) {
-        console.error('Token refresh failed:', error);
-        await logout();
-      }
-    }, refreshTime);
+    const handleAuthError = () => {
+      logout();
+    };
 
-    return () => clearTimeout(timeoutId);
-  }, [token, logout]);
+    window.addEventListener('auth:token-updated', handleTokenUpdate as EventListener);
+    window.addEventListener('auth:logout', handleAuthError);
+
+    return () => {
+      window.removeEventListener('auth:token-updated', handleTokenUpdate as EventListener);
+      window.removeEventListener('auth:logout', handleAuthError);
+    };
+  }, [logout]);
 
   return (
     <AuthContext.Provider

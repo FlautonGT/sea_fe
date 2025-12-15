@@ -14,7 +14,8 @@ export const translations: Record<string, Record<string, string>> = {
     reports: 'Laporan',
     topUp: 'Top Up Saldo',
     checkTransaction: 'Cek Transaksi',
-    
+    dashboard: 'Dashboard',
+
     // Common
     loading: 'Memuat...',
     seeAll: 'Lihat Semua',
@@ -27,17 +28,24 @@ export const translations: Record<string, Record<string, string>> = {
     change: 'Ubah',
     loadMore: 'Muat Lebih Banyak',
     backToHome: 'Kembali ke Beranda',
-    
+    type_credit: 'Masuk (Kredit)',
+    type_debit: 'Keluar (Debit)',
+
     // Home
     topUpTitle: 'Top Up Game & Pulsa Mudah dan Cepat',
     fastProcess: 'Proses Cepat',
     support247: 'Layanan 24/7',
     safeSecure: 'Aman & Terpercaya',
     latestPromo: 'Promo Terbaru',
+    flashSale: 'Flash Sale',
+    endsIn: 'Berakhir dalam',
+    yourFavorites: 'Favorit Kamu',
+    gameSelection: 'Pilihan Game',
+    seeAllGames: 'Lihat Semua Game',
     favorites: 'Favorit',
     trending: 'Sedang Trending',
     voucherTopUp: 'Voucher & Top Up',
-    
+
     // Auth
     loginTitle: 'Masuk ke Akun Anda',
     loginSubtitle: 'Selamat datang kembali!',
@@ -67,7 +75,7 @@ export const translations: Record<string, Record<string, string>> = {
     referralCode: 'Kode Referral',
     referralCodePlaceholder: 'Masukkan kode referral (opsional)',
     referralCodeHelper: 'Dapatkan bonus dengan memasukkan kode referral',
-    
+
     // Product Detail
     accountData: 'Data Akun',
     selectItem: 'Pilih Nominal',
@@ -94,7 +102,7 @@ export const translations: Record<string, Record<string, string>> = {
     payment: 'Pembayaran',
     agreeToTerms: 'Dengan mengklik Pesan Sekarang, kamu sudah menyetujui',
     termsAndConditions: 'Syarat & Ketentuan',
-    
+
     // Invoice
     invoiceNumber: 'Nomor Invoice',
     invoiceNumberPlaceholder: 'Masukkan nomor invoice',
@@ -103,7 +111,7 @@ export const translations: Record<string, Record<string, string>> = {
     paymentInstructions: 'Instruksi Pembayaran',
     payNow: 'Bayar Sekarang',
     paymentCode: 'Kode Pembayaran',
-    
+
     // Account
     balance: 'Saldo',
     updateProfile: 'Perbarui Profil',
@@ -127,23 +135,36 @@ export const translations: Record<string, Record<string, string>> = {
     summary: 'Ringkasan',
     amount: 'Nominal',
     topUpNow: 'Top Up Sekarang',
-    
+
     // Settings
     changeCurrencyLanguage: 'Ubah Mata Uang & Bahasa',
     currency: 'Mata Uang',
     languageLabel: 'Bahasa',
     enableDarkMode: 'Mode Gelap',
-    
+
     // User
     hi: 'Hai',
     welcomeBack: 'Selamat datang kembali',
-    
+
     // Footer
     headOffice: 'Kantor Pusat',
     legality: 'Legalitas',
     socialMedia: 'Media Sosial',
     copyright: 'Hak Cipta',
     allRightsReserved: 'Seluruh hak cipta dilindungi.',
+
+    // Statuses
+    status_pending: 'Menunggu',
+    status_processing: 'Dalam Proses',
+    status_success: 'Berhasil',
+    status_failed: 'Gagal',
+    status_unpaid: 'Belum Bayar',
+    status_paid: 'Lunas',
+    status_expired: 'Kadaluarsa',
+    status_refunded: 'Dikembalikan',
+
+    // Popup
+    dontShowAgain: 'Jangan tampilkan lagi',
   },
   en: {
     // Navigation
@@ -158,7 +179,8 @@ export const translations: Record<string, Record<string, string>> = {
     reports: 'Reports',
     topUp: 'Top Up Balance',
     checkTransaction: 'Check Transaction',
-    
+    dashboard: 'Dashboard',
+
     // Common
     loading: 'Loading...',
     seeAll: 'See All',
@@ -171,17 +193,24 @@ export const translations: Record<string, Record<string, string>> = {
     change: 'Change',
     loadMore: 'Load More',
     backToHome: 'Back to Home',
-    
+    type_credit: 'Credit',
+    type_debit: 'Debit',
+
     // Home
     topUpTitle: 'Easy and Fast Game & Credits Top Up',
     fastProcess: 'Fast Process',
     support247: '24/7 Support',
     safeSecure: 'Safe & Secure',
     latestPromo: 'Latest Promos',
+    flashSale: 'Flash Sale',
+    endsIn: 'Ends in',
+    yourFavorites: 'Your Favorites',
+    gameSelection: 'Game Selection',
+    seeAllGames: 'See All Games',
     favorites: 'Favorites',
     trending: 'Trending Now',
     voucherTopUp: 'Voucher & Top Up',
-    
+
     // Auth
     loginTitle: 'Sign in to Your Account',
     loginSubtitle: 'Welcome back!',
@@ -211,7 +240,7 @@ export const translations: Record<string, Record<string, string>> = {
     referralCode: 'Referral Code',
     referralCodePlaceholder: 'Enter referral code (optional)',
     referralCodeHelper: 'Get bonus by entering a referral code',
-    
+
     // Product Detail
     accountData: 'Account Data',
     selectItem: 'Select Item',
@@ -238,7 +267,7 @@ export const translations: Record<string, Record<string, string>> = {
     payment: 'Payment',
     agreeToTerms: 'By clicking Order Now, you agree to the',
     termsAndConditions: 'Terms & Conditions',
-    
+
     // Invoice
     invoiceNumber: 'Invoice Number',
     invoiceNumberPlaceholder: 'Enter invoice number',
@@ -247,7 +276,7 @@ export const translations: Record<string, Record<string, string>> = {
     paymentInstructions: 'Payment Instructions',
     payNow: 'Pay Now',
     paymentCode: 'Payment Code',
-    
+
     // Account
     balance: 'Balance',
     updateProfile: 'Update Profile',
@@ -271,23 +300,36 @@ export const translations: Record<string, Record<string, string>> = {
     summary: 'Summary',
     amount: 'Amount',
     topUpNow: 'Top Up Now',
-    
+
     // Settings
     changeCurrencyLanguage: 'Change Currency & Language',
     currency: 'Currency',
     languageLabel: 'Language',
     enableDarkMode: 'Dark Mode',
-    
+
     // User
     hi: 'Hi',
     welcomeBack: 'Welcome back',
-    
+
     // Footer
     headOffice: 'Head Office',
     legality: 'Legality',
     socialMedia: 'Social Media',
     copyright: 'Copyright',
     allRightsReserved: 'All rights reserved.',
+
+    // Statuses
+    status_pending: 'Pending',
+    status_processing: 'Processing',
+    status_success: 'Success',
+    status_failed: 'Failed',
+    status_unpaid: 'Unpaid',
+    status_paid: 'Paid',
+    status_expired: 'Expired',
+    status_refunded: 'Refunded',
+
+    // Popup
+    dontShowAgain: "Don't show again",
   },
 };
 

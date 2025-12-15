@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { DataTable, StatusBadge, StatsCard } from '@/components/admin/ui';
 import { getTransactions } from '@/lib/adminApi';
 import { AdminTransaction, Pagination } from '@/types/admin';
+import TransactionDetailSheet from '@/components/admin/transactions/TransactionDetailSheet';
 import {
   Search,
   Filter,
@@ -30,6 +31,7 @@ function formatCurrency(value: number, currency: string = 'IDR'): string {
 }
 
 export default function TransactionsPage() {
+  const [selectedTransaction, setSelectedTransaction] = useState<AdminTransaction | null>(null);
   const [transactions, setTransactions] = useState<AdminTransaction[]>([]);
   const [overview, setOverview] = useState<{
     totalTransactions: number;
@@ -43,11 +45,13 @@ export default function TransactionsPage() {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // Filters
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -55,15 +59,17 @@ export default function TransactionsPage() {
     try {
       setLoading(true);
       setError('');
-      
+
       const data = await getTransactions({
         limit: 10,
         page,
         search: search || undefined,
         status: status || undefined,
         paymentStatus: paymentStatus || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
       });
-      
+
       setTransactions(data.transactions);
       setOverview(data.overview);
       setPagination(data.pagination);
@@ -75,7 +81,7 @@ export default function TransactionsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, status, paymentStatus]);
+  }, [page, search, status, paymentStatus, startDate, endDate]);
 
   useEffect(() => {
     fetchTransactions();
@@ -154,7 +160,10 @@ export default function TransactionsPage() {
       key: 'actions',
       header: '',
       render: (item: AdminTransaction) => (
-        <button className="p-2 text-gray-500 hover:text-primary hover:bg-gray-100 rounded-lg transition-colors">
+        <button
+          onClick={() => setSelectedTransaction(item)}
+          className="p-2 text-gray-500 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
+        >
           <Eye className="w-4 h-4" />
         </button>
       ),
@@ -199,7 +208,7 @@ export default function TransactionsPage() {
         <StatsCard
           title="Total Transaksi"
           value={overview?.totalTransactions?.toLocaleString('id-ID') || '0'}
-          icon={<ShoppingCart className="w-5 h-5 text-primary" />}
+          icon={<ShoppingCart className="w-5 h-5 text-primary-600" />}
           loading={loading}
         />
         <StatsCard
@@ -227,55 +236,81 @@ export default function TransactionsPage() {
 
       {/* Filters */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari invoice, email, nomor HP..."
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            />
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Cari invoice, email, nomor HP..."
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent bg-white"
+            >
+              <option value="">Semua Status</option>
+              <option value="SUCCESS">Sukses</option>
+              <option value="PROCESSING">Diproses</option>
+              <option value="PENDING">Pending</option>
+              <option value="FAILED">Gagal</option>
+            </select>
+
+            {/* Payment Status Filter */}
+            <select
+              value={paymentStatus}
+              onChange={(e) => setPaymentStatus(e.target.value)}
+              className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent bg-white"
+            >
+              <option value="">Semua Pembayaran</option>
+              <option value="PAID">Dibayar</option>
+              <option value="UNPAID">Belum Dibayar</option>
+              <option value="EXPIRED">Kadaluarsa</option>
+            </select>
+
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={cn(
+                'inline-flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-lg',
+                'text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors',
+                showFilters && 'bg-gray-100'
+              )}
+            >
+              <Filter className="w-4 h-4" />
+              Filter
+            </button>
           </div>
 
-          {/* Status Filter */}
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
-          >
-            <option value="">Semua Status</option>
-            <option value="SUCCESS">Sukses</option>
-            <option value="PROCESSING">Diproses</option>
-            <option value="PENDING">Pending</option>
-            <option value="FAILED">Gagal</option>
-          </select>
-
-          {/* Payment Status Filter */}
-          <select
-            value={paymentStatus}
-            onChange={(e) => setPaymentStatus(e.target.value)}
-            className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
-          >
-            <option value="">Semua Pembayaran</option>
-            <option value="PAID">Dibayar</option>
-            <option value="UNPAID">Belum Dibayar</option>
-            <option value="EXPIRED">Kadaluarsa</option>
-          </select>
-
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={cn(
-              'inline-flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-lg',
-              'text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors',
-              showFilters && 'bg-gray-100'
-            )}
-          >
-            <Filter className="w-4 h-4" />
-            Filter Lanjutan
-          </button>
+          {/* Advanced Filters */}
+          {showFilters && (
+            <div className="pt-4 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -288,15 +323,26 @@ export default function TransactionsPage() {
         pagination={
           pagination
             ? {
-                page: pagination.page,
-                totalPages: pagination.totalPages,
-                totalRows: pagination.totalRows,
-                limit: pagination.limit,
-                onPageChange: setPage,
-              }
+              page: pagination.page,
+              totalPages: pagination.totalPages,
+              totalRows: pagination.totalRows,
+              limit: pagination.limit,
+              onPageChange: setPage,
+            }
             : undefined
         }
       />
+      {selectedTransaction && (
+        <TransactionDetailSheet
+          transaction={selectedTransaction}
+          isOpen={!!selectedTransaction}
+          onClose={() => setSelectedTransaction(null)}
+          onUpdate={() => {
+            setSelectedTransaction(null);
+            fetchTransactions();
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -18,18 +18,18 @@ interface PaymentSummaryProps {
 }
 
 // Progress Step Component
-function ProgressStep({ 
-  step, 
-  label, 
-  sublabel, 
-  isActive, 
-  isCompleted, 
-  isLast 
-}: { 
-  step: number; 
-  label: string; 
-  sublabel: string; 
-  isActive: boolean; 
+function ProgressStep({
+  step,
+  label,
+  sublabel,
+  isActive,
+  isCompleted,
+  isLast
+}: {
+  step: number;
+  label: string;
+  sublabel: string;
+  isActive: boolean;
   isCompleted: boolean;
   isLast: boolean;
 }) {
@@ -42,17 +42,17 @@ function ProgressStep({
           isCompleted ? "bg-green-500" : "bg-gray-200"
         )} />
       )}
-      
+
       {/* Step circle */}
       <div className={cn(
         "w-8 h-8 rounded-full flex items-center justify-center z-10 text-sm font-bold transition-all",
-        isCompleted ? "bg-green-500 text-white" : 
-        isActive ? "bg-primary-600 text-white" : 
-        "bg-gray-200 text-gray-400"
+        isCompleted ? "bg-green-500 text-white" :
+          isActive ? "bg-primary-600 text-white" :
+            "bg-gray-200 text-gray-400"
       )}>
         {isCompleted ? <CheckCircle className="w-5 h-5" /> : step}
       </div>
-      
+
       {/* Labels */}
       <span className={cn(
         "mt-2 text-xs font-semibold text-center",
@@ -76,7 +76,7 @@ function CountdownTimer({ expiredAt }: { expiredAt: string }) {
       const now = new Date().getTime();
       const expired = new Date(expiredAt).getTime();
       const diff = Math.max(0, expired - now);
-      
+
       return {
         hours: Math.floor(diff / (1000 * 60 * 60)),
         minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
@@ -110,14 +110,15 @@ export default function PaymentSummary({
   copied,
 }: PaymentSummaryProps) {
   const { getLocalizedPath } = useLocale();
-  const { payment, pricing, account, productName, skuName, quantity, invoiceNumber, status, timeline, expiredAt, createdAt } = order;
-  
+  const { payment, pricing, account, productName, skuName, quantity, invoiceNumber, timeline, expiredAt, createdAt } = order;
+  const { transactionStatus } = order.status;
+
   // Handle account data
   const accountData = account as any;
   const accountId = accountData?.userId || (accountData?.inputs ? accountData.inputs.split(' - ')[0] : '') || '';
   const accountZoneId = accountData?.zoneId || (accountData?.inputs ? accountData.inputs.split(' - ')[1] : '') || '';
   const accountNickname = account?.nickname || '';
-  
+
   const subtotal = pricing?.subtotal || 0;
   const discount = pricing?.discount || 0;
   const paymentFee = pricing?.paymentFee || 0;
@@ -128,7 +129,7 @@ export default function PaymentSummary({
   const paymentType = (payment as any)?.paymentType?.toUpperCase() || '';
   const categoryCode = payment?.categoryCode?.toUpperCase() || '';
   const methodCode = payment?.code?.toUpperCase() || '';
-  
+
   const isQRIS = paymentType === 'QRIS' || categoryCode === 'QRIS' || methodCode.includes('QRIS');
   const isVA = paymentType === 'VIRTUAL_ACCOUNT' || categoryCode === 'VIRTUAL_ACCOUNT' || methodCode.includes('VA');
   const isEWallet = paymentType === 'E_WALLET' || categoryCode === 'E_WALLET' || ['GOPAY', 'DANA', 'OVO', 'SHOPEEPAY'].some(w => methodCode.includes(w));
@@ -137,12 +138,12 @@ export default function PaymentSummary({
 
   // Payment code from new API format (unified paymentCode field)
   const unifiedPaymentCode = (payment as any)?.paymentCode || '';
-  
+
   // QR Code URL from qrserver API (for QRIS)
-  const qrCodeUrl = (isQRIS && unifiedPaymentCode) 
+  const qrCodeUrl = (isQRIS && unifiedPaymentCode)
     ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(unifiedPaymentCode)}`
     : null;
-  
+
   // Barcode URL (for Retail)
   const barcodeUrl = (isRetail && unifiedPaymentCode)
     ? `https://bwipjs-api.metafloor.com/?bcid=code128&text=${encodeURIComponent(unifiedPaymentCode)}&scale=3&height=15&includetext`
@@ -156,27 +157,6 @@ export default function PaymentSummary({
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
-
-  // Progress steps based on status
-  const getProgressSteps = () => {
-    const steps = [
-      { label: 'Transaksi Dibuat', sublabel: 'Transaksi telah berhasil dibuat.', status: 'PENDING' },
-      { label: 'Pembayaran', sublabel: status === 'PENDING' ? 'Silakan melakukan pembayaran' : 'Pembayaran diterima', status: 'PAID' },
-      { label: 'Sedang Di Proses', sublabel: 'Pesanan sedang dalam proses.', status: 'PROCESSING' },
-      { label: 'Transaksi Selesai', sublabel: 'Transaksi telah berhasil dilakukan.', status: 'SUCCESS' },
-    ];
-    
-    const statusOrder = ['PENDING', 'PAID', 'PROCESSING', 'SUCCESS'];
-    const currentIndex = statusOrder.indexOf(status);
-    
-    return steps.map((step, index) => ({
-      ...step,
-      isCompleted: index < currentIndex,
-      isActive: index === currentIndex,
-    }));
-  };
-
-  const progressSteps = getProgressSteps();
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-lg">
@@ -207,8 +187,8 @@ export default function PaymentSummary({
         )}
       </div>
 
-      {/* QRIS QR Code */}
-      {isQRIS && qrCodeUrl && (
+      {/* QRIS QR Code - Only show when PENDING */}
+      {transactionStatus === 'PENDING' && isQRIS && qrCodeUrl && (
         <div className="p-6 flex flex-col items-center border-b border-gray-100 dark:border-gray-700">
           <div className="mb-2">
             <Image
@@ -259,19 +239,19 @@ export default function PaymentSummary({
             <span className="font-semibold text-gray-900 dark:text-white text-sm">{skuName}</span>
           </div>
         </div>
-        
+
         <div className="flex justify-between items-center px-6 py-3">
           <span className="text-sm text-gray-500">ID Akun</span>
           <span className="font-semibold text-gray-900 dark:text-white text-sm">{accountId || '-'}</span>
         </div>
-        
+
         {accountNickname && (
           <div className="flex justify-between items-center px-6 py-3">
             <span className="text-sm text-gray-500">Nama Akun</span>
             <span className="font-semibold text-gray-900 dark:text-white text-sm">{accountNickname}</span>
           </div>
         )}
-        
+
         <div className="flex justify-between items-center px-6 py-3">
           <span className="text-sm text-gray-500">Metode Pembayaran</span>
           <div className="flex items-center gap-2">
@@ -292,7 +272,7 @@ export default function PaymentSummary({
             </span>
           </div>
         </div>
-        
+
         <div className="flex justify-between items-center px-6 py-3">
           <span className="text-sm text-gray-500">Total Pembayaran</span>
           <div className="flex items-center gap-2">
@@ -308,8 +288,8 @@ export default function PaymentSummary({
           </div>
         </div>
 
-        {/* Virtual Account Number */}
-        {isVA && unifiedPaymentCode && (
+        {/* Virtual Account Number - Only show when PENDING */}
+        {transactionStatus === 'PENDING' && isVA && unifiedPaymentCode && (
           <div className="flex justify-between items-center px-6 py-3 bg-blue-50 dark:bg-blue-900/20">
             <span className="text-sm text-gray-500">Nomor Virtual Account</span>
             <div className="flex items-center gap-2">
@@ -326,8 +306,8 @@ export default function PaymentSummary({
           </div>
         )}
 
-        {/* Retail Code with Barcode */}
-        {isRetail && unifiedPaymentCode && (
+        {/* Retail Code with Barcode - Only show when PENDING */}
+        {transactionStatus === 'PENDING' && isRetail && unifiedPaymentCode && (
           <div className="px-6 py-4 bg-orange-50 dark:bg-orange-900/20">
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm text-gray-500">Kode Pembayaran</span>
@@ -359,8 +339,8 @@ export default function PaymentSummary({
         )}
       </div>
 
-      {/* E-Wallet / Card Redirect Button */}
-      {(isEWallet || isCard) && (unifiedPaymentCode || payment?.redirectUrl) && paymentType === 'E_WALLET' && (
+      {/* E-Wallet / Card Redirect Button - Only show when PENDING */}
+      {transactionStatus === 'PENDING' && (isEWallet || isCard) && (unifiedPaymentCode || payment?.redirectUrl) && paymentType === 'E_WALLET' && (
         <div className="p-6 border-t border-gray-100 dark:border-gray-700">
           <Button
             fullWidth
@@ -385,7 +365,7 @@ export default function PaymentSummary({
 
       {/* Action Buttons */}
       <div className="p-6 flex gap-4 border-t border-gray-100 dark:border-gray-700">
-        <Link href={getLocalizedPath('/check-transaction')} className="flex-1">
+        <Link href={getLocalizedPath('/invoice')} className="flex-1">
           <Button variant="outline" fullWidth>
             Cek Riwayat Pesanan
           </Button>
@@ -397,64 +377,66 @@ export default function PaymentSummary({
         </Link>
       </div>
 
-      {/* Payment Guide */}
-      <div className="border-t border-gray-100 dark:border-gray-700">
-        <h3 className="px-6 py-4 font-semibold text-gray-900 dark:text-white">
-          Panduan Pembayaran
-        </h3>
-        
-        {/* How to Pay - Expandable */}
-        <button
-          onClick={() => toggleSection('instruction')}
-          className="w-full flex items-center justify-between px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-t border-gray-100 dark:border-gray-700"
-        >
-          <span className="text-sm text-gray-700 dark:text-gray-300">Cara Melakukan Pembayaran</span>
-          {expandedSections.instruction ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-        </button>
-        {expandedSections.instruction && (
-          <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-700">
-            <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              {isQRIS ? (
-                <>
-                  <li>Pilih aplikasi e-wallet favoritmu (GoPay, DANA, OVO, dll)</li>
-                  <li>Pilih menu &quot;Bayar dengan QR&quot; atau &quot;Scan&quot;</li>
-                  <li>Scan QR code yang ditampilkan</li>
-                  <li>Konfirmasi pembayaran di aplikasi</li>
-                </>
-              ) : isVA ? (
-                <>
-                  <li>Buka aplikasi mobile banking atau ATM</li>
-                  <li>Pilih menu Transfer ke Virtual Account</li>
-                  <li>Masukkan nomor Virtual Account</li>
-                  <li>Konfirmasi jumlah dan lakukan pembayaran</li>
-                </>
-              ) : isEWallet ? (
-                <>
-                  <li>Klik tombol &quot;Bayar&quot; di atas</li>
-                  <li>Anda akan diarahkan ke aplikasi e-wallet</li>
-                  <li>Konfirmasi pembayaran di aplikasi</li>
-                </>
-              ) : isRetail ? (
-                <>
-                  <li>Kunjungi gerai {payment?.retailName || 'retail'} terdekat</li>
-                  <li>Tunjukkan kode pembayaran ke kasir</li>
-                  <li>Lakukan pembayaran</li>
-                </>
-              ) : (
-                <>
-                  <li>Ikuti instruksi pembayaran</li>
-                  <li>Konfirmasi pembayaran</li>
-                </>
-              )}
-            </ol>
+      {/* Payment Guide - Only show when PENDING */}
+      {transactionStatus === 'PENDING' && (
+        <div className="border-t border-gray-100 dark:border-gray-700">
+          <h3 className="px-6 py-4 font-semibold text-gray-900 dark:text-white">
+            Panduan Pembayaran
+          </h3>
+
+          {/* How to Pay - Expandable */}
+          <button
+            onClick={() => toggleSection('instruction')}
+            className="w-full flex items-center justify-between px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-t border-gray-100 dark:border-gray-700"
+          >
+            <span className="text-sm text-gray-700 dark:text-gray-300">Cara Melakukan Pembayaran</span>
+            {expandedSections.instruction ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+          </button>
+          {expandedSections.instruction && (
+            <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-700">
+              <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                {isQRIS ? (
+                  <>
+                    <li>Pilih aplikasi e-wallet favoritmu (GoPay, DANA, OVO, dll)</li>
+                    <li>Pilih menu &quot;Bayar dengan QR&quot; atau &quot;Scan&quot;</li>
+                    <li>Scan QR code yang ditampilkan</li>
+                    <li>Konfirmasi pembayaran di aplikasi</li>
+                  </>
+                ) : isVA ? (
+                  <>
+                    <li>Buka aplikasi mobile banking atau ATM</li>
+                    <li>Pilih menu Transfer ke Virtual Account</li>
+                    <li>Masukkan nomor Virtual Account</li>
+                    <li>Konfirmasi jumlah dan lakukan pembayaran</li>
+                  </>
+                ) : isEWallet ? (
+                  <>
+                    <li>Klik tombol &quot;Bayar&quot; di atas</li>
+                    <li>Anda akan diarahkan ke aplikasi e-wallet</li>
+                    <li>Konfirmasi pembayaran di aplikasi</li>
+                  </>
+                ) : isRetail ? (
+                  <>
+                    <li>Kunjungi gerai {payment?.retailName || 'retail'} terdekat</li>
+                    <li>Tunjukkan kode pembayaran ke kasir</li>
+                    <li>Lakukan pembayaran</li>
+                  </>
+                ) : (
+                  <>
+                    <li>Ikuti instruksi pembayaran</li>
+                    <li>Konfirmasi pembayaran</li>
+                  </>
+                )}
+              </ol>
+            </div>
+          )}
+
+          {/* Additional Note */}
+          <div className="px-6 py-3 text-sm text-gray-500 border-t border-gray-100 dark:border-gray-700">
+            Gunakan <span className="text-primary-600 font-medium">E-wallet</span> atau <span className="text-primary-600 font-medium">aplikasi mobile banking</span> yang tersedia scan QRIS
           </div>
-        )}
-        
-        {/* Additional Note */}
-        <div className="px-6 py-3 text-sm text-gray-500 border-t border-gray-100 dark:border-gray-700">
-          Gunakan <span className="text-primary-600 font-medium">E-wallet</span> atau <span className="text-primary-600 font-medium">aplikasi mobile banking</span> yang tersedia scan QRIS
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -81,8 +81,8 @@ export default function UsersPage() {
       header: 'Pengguna',
       render: (item: AdminUser) => (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium text-primary">
+          <div className="w-10 h-10 bg-primary-50 rounded-full flex items-center justify-center">
+            <span className="text-sm font-medium text-primary-600">
               {item.firstName[0]}{item.lastName[0]}
             </span>
           </div>
@@ -158,10 +158,10 @@ export default function UsersPage() {
       header: '',
       render: (item: AdminUser) => (
         <div className="flex items-center gap-1">
-          <button className="p-2 text-gray-500 hover:text-primary hover:bg-gray-100 rounded-lg transition-colors">
+          <button className="p-2 text-gray-500 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors">
             <Eye className="w-4 h-4" />
           </button>
-          <button className="p-2 text-gray-500 hover:text-primary hover:bg-gray-100 rounded-lg transition-colors">
+          <button className="p-2 text-gray-500 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors">
             <MoreVertical className="w-4 h-4" />
           </button>
         </div>
@@ -207,7 +207,7 @@ export default function UsersPage() {
         <StatsCard
           title="Total Pengguna"
           value={pagination?.totalRows?.toLocaleString('id-ID') || '0'}
-          icon={<Users className="w-5 h-5 text-primary" />}
+          icon={<Users className="w-5 h-5 text-primary-600" />}
           loading={loading}
         />
         <StatsCard
@@ -244,7 +244,7 @@ export default function UsersPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari nama, email, atau nomor HP..."
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
             />
           </div>
 
@@ -252,7 +252,7 @@ export default function UsersPage() {
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
+            className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent bg-white"
           >
             <option value="">Semua Status</option>
             <option value="ACTIVE">Aktif</option>
@@ -264,7 +264,7 @@ export default function UsersPage() {
           <select
             value={membership}
             onChange={(e) => setMembership(e.target.value)}
-            className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
+            className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent bg-white"
           >
             <option value="">Semua Membership</option>
             <option value="CLASSIC">Classic</option>

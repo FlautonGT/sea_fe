@@ -21,6 +21,7 @@ const config: Config = {
           700: "#1A56DB",
           800: "#1E429F",
           900: "#233876",
+          DEFAULT: "#1C64F2",
         },
         sea: {
           blue: "#1565C0",

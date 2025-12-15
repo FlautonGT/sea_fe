@@ -26,11 +26,11 @@ export default function PaymentSuccess({
 }: PaymentSuccessProps) {
   const { getLocalizedPath } = useLocale();
   const { payment, pricing, account, productName, skuName, invoiceNumber } = order;
-  
+
   const accountData = account as any;
   const accountId = accountData?.userId || (accountData?.inputs ? accountData.inputs.split(' - ')[0] : '') || '';
   const accountNickname = account?.nickname || '';
-  
+
   const total = pricing?.total || 0;
   const orderCurrency = pricing?.currency || currency;
 
@@ -39,14 +39,14 @@ export default function PaymentSuccess({
       {/* Header */}
       <div className="text-center p-6 border-b border-gray-100 dark:border-gray-700">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-          {language === 'id' ? 'Pembayaran Berhasil!' : 'Payment Successful!'}
+          {language === 'id' ? 'Transaksi Selesai!' : 'Transaction Completed!'}
         </h2>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          {language === 'id' 
-            ? `Pembayaran berhasil — ${skuName} segera masuk. Cek game kamu sebentar lagi`
-            : `Payment successful — ${skuName} will be credited soon. Check your game shortly`}
+          {language === 'id'
+            ? `Transaksi berhasil — ${skuName} segera masuk. Cek game kamu sebentar lagi`
+            : `Transaction successful — ${skuName} will be credited soon. Check your game shortly`}
         </p>
-        
+
         {/* Success Icon */}
         <div className="flex justify-center">
           <div className="w-20 h-20 rounded-full bg-green-500 flex items-center justify-center">
@@ -63,19 +63,19 @@ export default function PaymentSuccess({
             <span className="font-semibold text-gray-900 dark:text-white text-sm">{skuName}</span>
           </div>
         </div>
-        
+
         <div className="flex justify-between items-center px-6 py-3">
           <span className="text-sm text-gray-500">ID Akun</span>
           <span className="font-semibold text-gray-900 dark:text-white text-sm">{accountId || '-'}</span>
         </div>
-        
+
         {accountNickname && (
           <div className="flex justify-between items-center px-6 py-3">
             <span className="text-sm text-gray-500">Nama Akun</span>
             <span className="font-semibold text-gray-900 dark:text-white text-sm">{accountNickname}</span>
           </div>
         )}
-        
+
         <div className="flex justify-between items-center px-6 py-3">
           <span className="text-sm text-gray-500">Metode Pembayaran</span>
           <div className="flex items-center gap-2">

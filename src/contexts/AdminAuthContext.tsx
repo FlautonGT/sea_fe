@@ -52,21 +52,21 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaToken, setMfaToken] = useState<string | null>(null);
 
-  // Load admin from localStorage on mount
+  // Load admin from sessionStorage on mount
   useEffect(() => {
     const loadAdmin = () => {
       try {
-        const savedAdmin = localStorage.getItem(ADMIN_KEY);
-        const token = localStorage.getItem(TOKEN_KEY);
+        const savedAdmin = sessionStorage.getItem(ADMIN_KEY);
+        const token = sessionStorage.getItem(TOKEN_KEY);
 
         if (savedAdmin && token) {
           setAdmin(JSON.parse(savedAdmin));
         }
       } catch (error) {
         console.error('Failed to load admin data:', error);
-        localStorage.removeItem(ADMIN_KEY);
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
+        sessionStorage.removeItem(ADMIN_KEY);
+        sessionStorage.removeItem(TOKEN_KEY);
+        sessionStorage.removeItem(REFRESH_TOKEN_KEY);
       } finally {
         setIsLoading(false);
       }
@@ -91,19 +91,19 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
   const handleLoginResponse = useCallback((response: AdminLoginResponse) => {
     console.log('[AdminAuth] Login response:', response);
-    
+
     // Check if MFA is required (has step: "MFA_VERIFICATION")
     if (response.step === 'MFA_VERIFICATION' && response.mfaToken) {
       setMfaRequired(true);
       setMfaToken(response.mfaToken);
       return;
     }
-    
+
     // Success response has token object and admin object (no step field)
     if (response.token && response.admin) {
-      localStorage.setItem(TOKEN_KEY, response.token.accessToken);
-      localStorage.setItem(REFRESH_TOKEN_KEY, response.token.refreshToken);
-      localStorage.setItem(ADMIN_KEY, JSON.stringify(response.admin));
+      sessionStorage.setItem(TOKEN_KEY, response.token.accessToken);
+      sessionStorage.setItem(REFRESH_TOKEN_KEY, response.token.refreshToken);
+      sessionStorage.setItem(ADMIN_KEY, JSON.stringify(response.admin));
       setAdmin(response.admin);
       setMfaRequired(false);
       setMfaToken(null);
@@ -111,7 +111,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       router.replace('/panel-admin');
       return;
     }
-    
+
     console.error('[AdminAuth] Unexpected response format:', response);
   }, [router]);
 
@@ -145,9 +145,9 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       // Ignore logout errors
     } finally {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
-      localStorage.removeItem(ADMIN_KEY);
+      sessionStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+      sessionStorage.removeItem(ADMIN_KEY);
       setAdmin(null);
       router.replace('/panel-admin/login');
     }

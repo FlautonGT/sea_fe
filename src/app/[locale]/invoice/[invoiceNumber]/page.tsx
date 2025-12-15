@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { XCircle, Home } from 'lucide-react';
@@ -10,11 +10,21 @@ import { useLocale, useTranslation } from '@/contexts/LocaleContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Invoice } from '@/types';
 import { getInvoiceDetails } from '@/lib/api';
+import { motion, AnimatePresence } from 'framer-motion';
 import PaymentStatusAnimation from '@/components/payment/PaymentStatusAnimation';
-import PaymentSummary from '@/components/payment/PaymentSummary';
-import PaymentSuccess from '@/components/payment/PaymentSuccess';
-import PaymentFailed from '@/components/payment/PaymentFailed';
-import { AnimatedCheck, AnimatedProcessing, AnimatedPending, AnimatedFailed } from '@/components/ui/AnimatedIcons';
+import { AnimatedCheck, AnimatedProcessing, AnimatedPending, AnimatedFailed, AnimatedExpired, AnimatedRefunded } from '@/components/ui/AnimatedIcons';
+import { formatCurrency, cn } from '@/lib/utils';
+import { getTransactionStatusColor, getPaymentStatusColor, getStatusTranslationKey } from '@/lib/status';
+import { translations } from '@/lib/translations';
+import { saveRecentAccount } from '@/lib/recentAccounts';
+import { getLocalTransactions, syncLocalTransaction } from '@/lib/localHistory';
+
+// New Components
+import HorizontalStepper from '@/components/payment/HorizontalStepper';
+import AccountInfoCard from '@/components/payment/AccountInfoCard';
+import TransactionStatusCard from '@/components/payment/TransactionStatusCard';
+import PaymentInstructionCard from '@/components/payment/PaymentInstructionCard';
+import Timeline from '@/components/payment/Timeline'; // Kept as optional legacy/history view if needed at bottom
 
 export default function InvoicePage() {
   const params = useParams();
@@ -31,6 +41,28 @@ export default function InvoicePage() {
   const [showAnimation, setShowAnimation] = useState(true);
   const [animationComplete, setAnimationComplete] = useState(false);
 
+  // Helper to check for client-side expiry
+  const checkExpiry = (data: Invoice): Invoice => {
+    const { paymentStatus, transactionStatus } = data.status;
+
+    // If already final state, return as is
+    if (paymentStatus === 'PAID' || paymentStatus === 'EXPIRED' || paymentStatus === 'REFUNDED' || paymentStatus === 'FAILED') return data;
+    if (transactionStatus === 'SUCCESS' || transactionStatus === 'FAILED') return data;
+
+    // Check if expired
+    if (data.expiredAt && new Date() >= new Date(data.expiredAt)) {
+      return {
+        ...data,
+        status: {
+          ...data.status,
+          paymentStatus: 'EXPIRED',
+          transactionStatus: 'FAILED' // As requested: "expired and failed"
+        }
+      };
+    }
+    return data;
+  };
+
   useEffect(() => {
     async function fetchInvoice() {
       setIsLoading(true);
@@ -44,7 +76,10 @@ export default function InvoicePage() {
         if (response.error) {
           setError(response.error.message);
         } else if (response.data) {
-          setInvoice(response.data);
+          const checked = checkExpiry(response.data);
+          setInvoice(checked);
+          // Sync with local storage
+          syncLocalTransaction(regionCode, checked);
         }
       } catch (error) {
         console.error('Failed to fetch invoice:', error);
@@ -61,7 +96,7 @@ export default function InvoicePage() {
 
   // Polling for status updates (for pending orders)
   useEffect(() => {
-    if (!invoice || invoice.status !== 'PENDING') return;
+    if (!invoice || (invoice.status.transactionStatus !== 'PENDING' && invoice.status.transactionStatus !== 'PROCESSING')) return;
 
     const pollInterval = setInterval(async () => {
       try {
@@ -70,10 +105,22 @@ export default function InvoicePage() {
           regionCode,
           token?.accessToken
         );
-        if (response.data && response.data.status !== invoice.status) {
-          setInvoice(response.data);
-          setShowAnimation(true);
-          setAnimationComplete(false);
+        if (response.data) {
+          const checkedData = checkExpiry(response.data);
+          // Compare with current invoice state logic could be complex due to object ref, 
+          // but we mainly care if status changed OR if it just expired client-side.
+          // Simplest is to just set it if anything different or just set it.
+          // Let's check status specifically to avoid unnecessary re-renders/animations if deep equal.
+          if (
+            checkedData.status.transactionStatus !== invoice.status.transactionStatus ||
+            checkedData.status.paymentStatus !== invoice.status.paymentStatus
+          ) {
+            setInvoice(checkedData);
+            setShowAnimation(true);
+            setAnimationComplete(false);
+          }
+          // Sync with local storage
+          syncLocalTransaction(regionCode, checkedData);
         }
       } catch (error) {
         console.error('Failed to poll invoice status:', error);
@@ -83,15 +130,43 @@ export default function InvoicePage() {
     return () => clearInterval(pollInterval);
   }, [invoice, invoiceNumber, regionCode, token]);
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  // Save successful transaction to recent accounts
+  useEffect(() => {
+    if (invoice && invoice.status.transactionStatus === 'SUCCESS') {
+      const accountData = invoice.account as any;
+      if (accountData?.userId) {
+        const inputs = [
+          { label: 'id', value: accountData.userId }
+        ];
+        if (accountData.zoneId) {
+          inputs.push({ label: 'server', value: accountData.zoneId });
+        }
+
+        saveRecentAccount(regionCode, invoice.product?.code || '', {
+          nickname: invoice.account?.nickname || '',
+          inputs: inputs,
+          lastUsed: new Date().toISOString(),
+        });
+      }
+    }
+  }, [invoice, regionCode]);
+
+  // Fetch last transactions
+  const [lastTransactions, setLastTransactions] = useState<any[]>([]);
+  useEffect(() => {
+    // Import dynamically or assume imported
+    setLastTransactions(getLocalTransactions(regionCode));
+  }, [regionCode]);
 
   const handleAnimationComplete = () => {
     setShowAnimation(false);
     setAnimationComplete(true);
+  };
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (isLoading) {
@@ -126,122 +201,134 @@ export default function InvoicePage() {
     );
   }
 
-  // Map status for animation
-  const getAnimationStatus = (): 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | 'EXPIRED' => {
-    const status = invoice.status;
-    if (status === 'PENDING') return 'PENDING';
-    if (status === 'PAID' || status === 'PROCESSING') return 'PROCESSING';
-    if (status === 'SUCCESS') return 'SUCCESS';
-    if (status === 'FAILED' || status === 'EXPIRED' || status === 'CANCELLED') return 'FAILED';
+  // Determine detailed status for Animation
+  const getDisplayStatus = () => {
+    // OLD: const { status, paymentStatus } = invoice;
+    // NEW:
+    const { paymentStatus, transactionStatus } = invoice.status;
+
+    if (transactionStatus === 'SUCCESS') return 'SUCCESS';
+
+    if (paymentStatus === 'REFUNDED') return 'REFUNDED';
+    if (paymentStatus === 'EXPIRED') return 'EXPIRED';
+
+    // Check Transaction FAILED first (Prioritize showing failure over weird states if transaction explicitly failed)
+    if (transactionStatus === 'FAILED') return 'FAILED_TRANSACTION';
+
+    if (paymentStatus === 'FAILED') return 'FAILED_PAYMENT';
+
+    if (paymentStatus === 'PAID' || transactionStatus === 'PROCESSING') return 'PROCESSING';
     return 'PENDING';
   };
 
-  // Determine which component to show
-  const isPending = invoice.status === 'PENDING';
-  const isProcessing = invoice.status === 'PAID' || invoice.status === 'PROCESSING';
-  const isSuccess = invoice.status === 'SUCCESS';
-  const isFailed = invoice.status === 'FAILED' || invoice.status === 'EXPIRED' || invoice.status === 'CANCELLED';
+  const displayStatus = getDisplayStatus();
 
-  // Only show animation on initial load or status change
+  // Animation Status Mapping
+  const getAnimationStatus = (): 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | 'EXPIRED' => {
+    switch (displayStatus) {
+      case 'SUCCESS': return 'SUCCESS';
+      case 'PROCESSING': return 'PROCESSING';
+      case 'EXPIRED': return 'EXPIRED';
+      case 'FAILED_PAYMENT':
+      case 'FAILED_TRANSACTION':
+      case 'REFUNDED':
+        return 'FAILED';
+      default: return 'PENDING';
+    }
+  };
+
   const shouldShowAnimation = showAnimation && !animationComplete;
 
   return (
     <MainLayout>
-      {/* Full Screen Animation */}
-      {shouldShowAnimation && (
-        <PaymentStatusAnimation
-          status={getAnimationStatus()}
-          paymentCode={invoice.payment?.code}
-          onAnimationComplete={handleAnimationComplete}
-        />
-      )}
+      <AnimatePresence mode="wait">
+        {shouldShowAnimation && (
+          <PaymentStatusAnimation
+            key="animation"
+            status={getAnimationStatus()}
+            paymentCode={invoice?.payment?.code}
+            onAnimationComplete={handleAnimationComplete}
+            message={displayStatus === 'SUCCESS' ? (language === 'id' ? 'Pembayaran Berhasil!' : 'Payment Successful!') : undefined}
+          />
+        )}
 
-      {/* Content - only show after animation completes */}
-      {animationComplete && (
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          {/* Status Header - Enhanced version */}
-          <div className={`
-            relative overflow-hidden rounded-3xl p-8 mb-8 text-center shadow-xl
-            ${isPending ? 'bg-gradient-to-br from-amber-400 to-orange-500' :
-              isProcessing ? 'bg-gradient-to-br from-blue-500 to-indigo-600' :
-                isSuccess ? 'bg-gradient-to-br from-emerald-400 to-green-600' :
-                  'bg-gradient-to-br from-red-500 to-pink-600'}
-          `}>
-            {/* Background Pattern */}
-            <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px]" />
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-3xl" />
-            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-black/10 rounded-full blur-3xl" />
+        {animationComplete && (
+          <motion.div
+            key="content"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="min-h-screen bg-slate-50 dark:bg-slate-950/50 pb-20 relative overflow-hidden"
+          >
+            {/* Ambient Background Effects */}
+            <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-            <div className="relative z-10 flex flex-col items-center">
-              <div className="mb-4 bg-white/20 p-4 rounded-full backdrop-blur-md border border-white/30 shadow-inner">
-                {/* Dynamic Status Icon */}
-                {(() => {
-                  const iconProps = { size: 40, color: 'white' };
+            <div className="max-w-5xl mx-auto px-4 py-8 relative z-10">
+              {/* Header Progress Stepper */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <HorizontalStepper
+                  status={displayStatus}
+                  language={language}
+                  timeline={invoice.timeline}
+                />
+              </motion.div>
 
-                  if (isSuccess) return <AnimatedCheck {...iconProps} />;
-                  if (isProcessing) return <AnimatedProcessing {...iconProps} />;
-                  if (isFailed) return <AnimatedFailed {...iconProps} />;
-                  return <AnimatedPending {...iconProps} />;
-                })()}
+              {/* Main Content Grid */}
+              <div className="mt-8 grid grid-cols-1 gap-8">
+
+                {/* Account & Transaction Dashboards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                  >
+                    <AccountInfoCard order={invoice} language={language} />
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                  >
+                    <TransactionStatusCard
+                      order={invoice}
+                      language={language}
+                      onCopy={handleCopy}
+                      copied={copied}
+                    />
+                  </motion.div>
+                </div>
+
+                {/* Payment Instructions (Only if Pending) */}
+                {invoice.status.transactionStatus === 'PENDING' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                  >
+                    <PaymentInstructionCard
+                      order={invoice}
+                      language={language}
+                      onCopy={handleCopy}
+                      copied={copied}
+                    />
+                  </motion.div>
+                )}
+
+                {/* Last Transactions List Removed */}
+
               </div>
-
-              <h1 className="text-3xl font-extrabold text-white mb-2 tracking-tight">
-                {isPending ? (language === 'id' ? 'Menunggu Pembayaran' : 'Awaiting Payment') :
-                  isProcessing ? (language === 'id' ? 'Sedang Diproses' : 'Processing') :
-                    isSuccess ? (language === 'id' ? 'Pesanan Selesai!' : 'Order Complete!') :
-                      (language === 'id' ? 'Pembayaran Kadaluarsa' : 'Payment Expired')}
-              </h1>
-              <p className="text-white/90 text-base font-medium max-w-lg mx-auto leading-relaxed">
-                {isPending ? (language === 'id' ? 'Silahkan untuk melakukan pembayaran dengan metode yang kamu pilih.' : 'Please make payment with your selected method.') :
-                  isProcessing ? (language === 'id' ? 'Pembayaran diterima, pesanan sedang diproses.' : 'Payment received, order is being processed.') :
-                    isSuccess ? (language === 'id' ? 'Pesanan kamu sudah berhasil diproses, layanan telah masuk ke akunmu!' : 'Your order has been successfully processed!') :
-                      (language === 'id' ? 'Batas waktu pembayaran telah berakhir. Silahkan lakukan pembelian ulang.' : 'Payment deadline has expired. Please make a new purchase.')}
-              </p>
             </div>
-          </div>
-
-          {/* Payment Summary / Details */}
-          {isPending && (
-            <PaymentSummary
-              order={invoice}
-              currency={currency}
-              language={language}
-              onCopy={handleCopy}
-              copied={copied}
-            />
-          )}
-
-          {isProcessing && (
-            <PaymentSummary
-              order={{ ...invoice, status: 'PROCESSING' }}
-              currency={currency}
-              language={language}
-              onCopy={handleCopy}
-              copied={copied}
-            />
-          )}
-
-          {isSuccess && (
-            <PaymentSuccess
-              order={invoice}
-              currency={currency}
-              language={language}
-              onCopy={handleCopy}
-              copied={copied}
-            />
-          )}
-
-          {isFailed && (
-            <PaymentFailed
-              order={invoice}
-              currency={currency}
-              language={language}
-              onCopy={handleCopy}
-              copied={copied}
-            />
-          )}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </MainLayout>
   );
 }

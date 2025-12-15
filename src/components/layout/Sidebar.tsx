@@ -3,7 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { X, Home, Receipt, User, Moon, Sun, LogOut, Settings, ChevronRight } from 'lucide-react';
+import { X, Home, Receipt, User, Moon, Sun, LogOut, Settings, ChevronRight, Wallet, ArrowLeftRight, LayoutDashboard, FileText } from 'lucide-react';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLocale, useTranslation } from '@/contexts/LocaleContext';
@@ -29,14 +30,18 @@ export default function Sidebar({ isOpen, onClose, onOpenCurrencyModal }: Sideba
 
   const menuItems = [
     { icon: Home, label: t('home'), href: '/' },
-    { icon: Receipt, label: t('checkTransaction'), href: '/check-transaction' },
+    { icon: Receipt, label: t('checkTransaction'), href: '/invoice' },
   ];
 
-  const accountItems = isAuthenticated
+  const dashboardItems = isAuthenticated
     ? [
-        { icon: User, label: t('myAccount'), href: '/account' },
-        { icon: Receipt, label: t('transactions'), href: '/account/transactions' },
-      ]
+      { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
+      { icon: Wallet, label: 'Saldo', href: '/deposit' },
+      { icon: Receipt, label: t('transactions'), href: '/transactions' },
+      { icon: ArrowLeftRight, label: 'Mutations', href: '/mutations' },
+      { icon: FileText, label: t('reports') || 'Reports', href: '/reports' },
+      { icon: User, label: t('profile') || 'Profile', href: '/profile' },
+    ]
     : [];
 
   return (
@@ -137,11 +142,11 @@ export default function Sidebar({ isOpen, onClose, onOpenCurrencyModal }: Sideba
             })}
           </div>
 
-          {accountItems.length > 0 && (
+          {dashboardItems.length > 0 && (
             <>
               <div className="my-4 border-t border-gray-200 dark:border-gray-700" />
               <div className="space-y-1">
-                {accountItems.map((item) => {
+                {dashboardItems.map((item) => {
                   const Icon = item.icon;
                   return (
                     <Link
@@ -158,6 +163,8 @@ export default function Sidebar({ isOpen, onClose, onOpenCurrencyModal }: Sideba
               </div>
             </>
           )}
+
+
 
           <div className="my-4 border-t border-gray-200 dark:border-gray-700" />
 

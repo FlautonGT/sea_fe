@@ -19,6 +19,16 @@ const nextConfig = {
       },
       {
         protocol: "https",
+        hostname: "cdn.gate.co.id",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "api.qrserver.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "gate.nos.jkt-1.neo.id",
         pathname: "/**",
       },

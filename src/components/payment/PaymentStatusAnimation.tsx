@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Check, X, Clock, CreditCard, Smartphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AnimatedCheck, AnimatedProcessing, AnimatedPending, AnimatedFailed } from '@/components/ui/AnimatedIcons';
@@ -39,15 +40,15 @@ const statusConfig = {
     color: 'from-red-400 to-red-500',
     bgColor: 'bg-gradient-to-br from-red-400 to-red-500',
     iconBg: 'bg-white/20',
-    title: { id: 'Pembayaran Kadaluarsa', en: 'Payment Expired' },
-    subtitle: { id: 'Batas waktu pembayaran telah berakhir. Silahkan lakukan pembelian ulang.', en: 'Payment deadline has expired. Please make a new purchase.' },
+    title: { id: 'Transaksi Gagal', en: 'Transaction Failed' },
+    subtitle: { id: 'Mohon maaf, transaksi kamu gagal. Silahkan coba lagi atau hubungi admin.', en: 'We are sorry, your transaction failed. Please try again or contact admin.' },
   },
   EXPIRED: {
     color: 'from-red-400 to-red-500',
     bgColor: 'bg-gradient-to-br from-red-400 to-red-500',
     iconBg: 'bg-white/20',
-    title: { id: 'Pembayaran Kadaluarsa', en: 'Payment Expired' },
-    subtitle: { id: 'Batas waktu pembayaran telah berakhir. Silahkan lakukan pembelian ulang.', en: 'Payment deadline has expired. Please make a new purchase.' },
+    title: { id: 'Transaksi Kadaluarsa', en: 'Transaction Expired' },
+    subtitle: { id: 'Waktu pembayaran telah berakhir. Transaksi dibatalkan otomatis.', en: 'Payment time has ended. Transaction automatically cancelled.' },
   },
 };
 
@@ -121,6 +122,7 @@ function SuccessParticles() {
     </>
   );
 }
+import { useLocale } from '@/contexts/LocaleContext';
 
 export default function PaymentStatusAnimation({
   status,
@@ -129,45 +131,42 @@ export default function PaymentStatusAnimation({
   message,
   subMessage,
 }: PaymentStatusAnimationProps) {
-  const [phase, setPhase] = useState<'fullscreen' | 'collapsing' | 'complete'>('fullscreen');
-  const [showContent, setShowContent] = useState(false);
+  const { language } = useLocale();
+  const [isMounted, setIsMounted] = useState(true);
   const config = statusConfig[status];
 
-
   useEffect(() => {
-    // Show content after small delay
-    const contentTimer = setTimeout(() => setShowContent(true), 200);
+    // Determine wait time based on status (failed/expired might need less "celebration" time)
+    const waitTime = status === 'PENDING' ? 3000 : 3500;
 
-    // Start collapsing after 3 seconds (giving more time to see animation)
-    const collapseTimer = setTimeout(() => setPhase('collapsing'), 3000);
-
-    // Complete after 4 seconds
-    const completeTimer = setTimeout(() => {
-      setPhase('complete');
+    const timer = setTimeout(() => {
+      setIsMounted(false);
+      // Trigger completion slightly after to allow state change to propagate
+      // But for layout animation, we want the swap to happen. 
+      // Actually, if we want layout animation, we need the component to unmount 
+      // exactly when the new one mounts.
       onAnimationComplete?.();
-    }, 4000);
+    }, waitTime);
 
-    return () => {
-      clearTimeout(contentTimer);
-      clearTimeout(collapseTimer);
-      clearTimeout(completeTimer);
-    };
-  }, [onAnimationComplete]);
+    return () => clearTimeout(timer);
+  }, [status, onAnimationComplete]);
 
-  if (phase === 'complete') return null;
+  // We rely on the parent removing this component to trigger the layout animation
+  // The parent should conditionally render this OR the content.
+  // We use motion.div with layoutId to seamlessly morph into the target.
 
+  const size = 80;
   const renderIcon = () => {
-    const size = 80;
-
     switch (status) {
       case 'SUCCESS':
         return (
           <div className="relative">
-            <div className={cn(
-              "w-32 h-32 rounded-full flex items-center justify-center bg-white shadow-2xl animate-in zoom-in duration-500",
-            )}>
+            <motion.div
+              layoutId="status-icon-bg"
+              className="w-32 h-32 rounded-full flex items-center justify-center bg-white shadow-2xl"
+            >
               <AnimatedCheck size={size} color="#10B981" />
-            </div>
+            </motion.div>
             <SuccessParticles />
             <DecorativeDots status={status} />
           </div>
@@ -176,71 +175,74 @@ export default function PaymentStatusAnimation({
       case 'EXPIRED':
         return (
           <div className="relative">
-            <div className={cn(
-              "w-32 h-32 rounded-full flex items-center justify-center bg-white shadow-2xl animate-in zoom-in duration-500",
-            )}>
+            <motion.div
+              layoutId="status-icon-bg"
+              className="w-32 h-32 rounded-full flex items-center justify-center bg-white shadow-2xl"
+            >
               <AnimatedFailed size={size} color="#EF4444" />
-            </div>
+            </motion.div>
             <DecorativeDots status={status} />
           </div>
         );
       case 'PROCESSING':
         return (
-          <div className={cn(
-            "w-32 h-32 rounded-full flex items-center justify-center bg-white/10 backdrop-blur-md shadow-xl border border-white/20 animate-in zoom-in duration-500",
-          )}>
+          <motion.div
+            layoutId="status-icon-bg"
+            className="w-32 h-32 rounded-full flex items-center justify-center bg-white/10 backdrop-blur-md shadow-xl border border-white/20"
+          >
             <AnimatedProcessing size={size} color="white" />
-          </div>
+          </motion.div>
         );
       default: // PENDING
         return (
           <div className="relative">
-            <div className={cn(
-              "w-32 h-32 rounded-2xl flex items-center justify-center bg-white shadow-2xl rotate-3 animate-in zoom-in duration-500",
-            )}>
+            <motion.div
+              layoutId="status-icon-bg"
+              className="w-32 h-32 rounded-2xl flex items-center justify-center bg-white shadow-2xl rotate-3"
+            >
               <AnimatedPending size={size} color="#F59E0B" />
-            </div>
+            </motion.div>
           </div>
         );
     }
   };
 
   return (
-    <div
+    <motion.div
+      layoutId="status-container"
       className={cn(
-        "fixed inset-0 z-50 flex flex-col items-center justify-center transition-all duration-1000 ease-[cubic-bezier(0.76,0,0.24,1)]",
-        config.bgColor,
-        phase === 'collapsing' ? "translate-y-full opacity-0 rounded-[50%]" : "translate-y-0 text-white rounded-none"
+        "fixed inset-0 z-50 flex flex-col items-center justify-center p-4",
+        config.bgColor
       )}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8, ease: [0.32, 0.72, 0, 1] }}
     >
       <div className="absolute inset-0 bg-black/10 backdrop-blur-sm" />
 
       {/* Content Container */}
-      <div className="relative z-10 flex flex-col items-center">
+      <div className="relative z-10 flex flex-col items-center max-w-lg w-full">
         {/* Icon */}
-        <div className={cn(
-          "mb-8 transition-all duration-700 delay-100",
-          showContent ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-50 translate-y-12"
-        )}>
+        <div className="mb-8">
           {renderIcon()}
         </div>
 
         {/* Title */}
-        <h1 className={cn(
-          "text-3xl md:text-5xl font-extrabold text-white text-center mb-6 tracking-tight drop-shadow-md transition-all duration-700 delay-200",
-          showContent ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-        )}>
-          {message || config.title.id}
-        </h1>
+        <motion.h1
+          layoutId="status-title"
+          className="text-3xl md:text-5xl font-extrabold text-white text-center mb-6 tracking-tight drop-shadow-md"
+        >
+          {message || (language === 'id' ? config.title.id : config.title.en)}
+        </motion.h1>
 
         {/* Subtitle */}
-        <p className={cn(
-          "text-white/90 text-lg md:text-xl text-center max-w-lg px-6 font-medium leading-relaxed drop-shadow-sm transition-all duration-700 delay-300",
-          showContent ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-        )}>
-          {subMessage || config.subtitle.id}
-        </p>
+        <motion.p
+          layoutId="status-text"
+          className="text-white/90 text-lg md:text-xl text-center font-medium leading-relaxed drop-shadow-sm"
+        >
+          {subMessage || (language === 'id' ? config.subtitle.id : config.subtitle.en)}
+        </motion.p>
       </div>
-    </div>
+    </motion.div>
   );
 }

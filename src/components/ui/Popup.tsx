@@ -1,11 +1,10 @@
-'use client';
-
 import React, { useEffect, useState } from 'react';
 import { X, Clock } from 'lucide-react';
 import { Popup } from '@/types';
 import { getPopups } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useTranslation } from '@/contexts/LocaleContext';
 
 interface PopupComponentProps {
   region: string;
@@ -15,6 +14,7 @@ const POPUP_STORAGE_KEY_PREFIX = 'popup_hidden_';
 const HIDDEN_DURATION_MS = 10 * 60 * 1000; // 10 menit dalam milliseconds
 
 export default function PopupComponent({ region }: PopupComponentProps) {
+  const { t } = useTranslation();
   const [popup, setPopup] = useState<Popup | null>(null);
   const [loading, setLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
@@ -25,29 +25,27 @@ export default function PopupComponent({ region }: PopupComponentProps) {
       try {
         setLoading(true);
         const response = await getPopups(region);
-        
+
         if (response.data && response.data.isActive) {
-          // Cek apakah popup ini sudah di-hidden dalam 10 menit terakhir
           const storageKey = `${POPUP_STORAGE_KEY_PREFIX}${region}`;
           const hiddenUntil = localStorage.getItem(storageKey);
-          
+
           if (hiddenUntil) {
             const hiddenUntilTime = parseInt(hiddenUntil, 10);
             const now = Date.now();
-            
+
             if (now < hiddenUntilTime) {
-              // Masih dalam periode hidden
               setPopup(null);
               setLoading(false);
               return;
             } else {
-              // Periode hidden sudah berakhir, hapus dari localStorage
               localStorage.removeItem(storageKey);
             }
           }
 
           setPopup(response.data);
-          setIsVisible(true);
+          // Small delay for smooth entry animation
+          setTimeout(() => setIsVisible(true), 500);
         } else {
           setPopup(null);
         }
@@ -64,54 +62,80 @@ export default function PopupComponent({ region }: PopupComponentProps) {
 
   const handleClose = () => {
     setIsVisible(false);
-    
+
     if (dontShowChecked) {
-      // Simpan waktu sampai popup tidak ditampilkan (10 menit dari sekarang)
       const storageKey = `${POPUP_STORAGE_KEY_PREFIX}${region}`;
-      const hiddenUntil = Date.now() + HIDDEN_DURATION_MS;
+      // Hide for 24 hours
+      const hiddenUntil = Date.now() + (24 * 60 * 60 * 1000);
       localStorage.setItem(storageKey, hiddenUntil.toString());
     }
   };
 
-  if (loading || !popup || !isVisible) {
+  if (loading || !popup) {
     return null;
   }
 
+  // Animation classes
+  const backdropClasses = isVisible ? "opacity-100" : "opacity-0";
+  const modalClasses = isVisible ? "scale-100 opacity-100 translate-y-0" : "scale-95 opacity-0 translate-y-4";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden animate-in fade-in zoom-in duration-300">
-        {/* Close Button */}
+    <div
+      className={cn(
+        "fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-500",
+        isVisible ? "pointer-events-auto" : "pointer-events-none"
+      )}
+    >
+      {/* Backdrop */}
+      <div
+        className={cn(
+          "absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-500",
+          backdropClasses
+        )}
+        onClick={handleClose}
+      />
+
+      {/* Modal Container */}
+      <div
+        className={cn(
+          "relative bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transition-all duration-500 ease-out border border-white/20",
+          modalClasses
+        )}
+      >
+        {/* Close Button - Floating */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 z-10 p-2 bg-white/80 hover:bg-white rounded-full transition-colors shadow-md"
+          className="absolute top-4 right-4 z-20 p-2 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full text-white transition-all transform hover:scale-110"
           aria-label="Tutup popup"
         >
-          <X className="w-5 h-5 text-gray-700" />
+          <X className="w-5 h-5" />
         </button>
 
-        {/* Image */}
+        {/* Image Section - Edge to Edge */}
         {popup.image && (
-          <div className="relative w-full aspect-video bg-gray-100">
+          <div className="relative w-full aspect-[4/3] bg-gray-100 dark:bg-gray-800">
             <img
               src={popup.image}
               alt={popup.title || 'Popup image'}
               className="w-full h-full object-cover"
             />
+            {/* Gradient Overlay for Text Readability */}
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white dark:from-gray-900 to-transparent" />
           </div>
         )}
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-16rem)]">
+        {/* Content Section */}
+        <div className="p-6 pt-2 relative">
           {popup.title && (
             <h2
-              className="text-2xl font-bold text-gray-900 mb-3"
+              className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3"
               dangerouslySetInnerHTML={{ __html: popup.title }}
             />
           )}
-          
+
           {popup.content && (
             <div
-              className="text-gray-600 mb-6 prose prose-sm max-w-none"
+              className="text-gray-600 dark:text-gray-300 mb-6 text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none"
               dangerouslySetInnerHTML={{ __html: popup.content }}
             />
           )}
@@ -121,27 +145,37 @@ export default function PopupComponent({ region }: PopupComponentProps) {
             <Link
               href={popup.href}
               onClick={handleClose}
-              className="block w-full mb-4 px-6 py-3 bg-primary text-white text-center font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+              className="group relative block w-full mb-4 overflow-hidden rounded-xl bg-primary-600 p-3 text-center transition-all hover:bg-primary-700 active:scale-95"
             >
-              Lihat Detail
+              <div className="relative z-10 flex items-center justify-center gap-2 font-semibold text-white">
+                <span>{t('seeAll')}</span>
+                <X className="w-4 h-4 rotate-45 group-hover:rotate-90 transition-transform" /> {/* Mock arrow icon using X for now or just generic */}
+              </div>
             </Link>
           )}
-        </div>
 
-        {/* Footer dengan checkbox */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={dontShowChecked}
-              onChange={(e) => setDontShowChecked(e.target.checked)}
-              className="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary focus:ring-2"
-            />
-            <span className="text-sm text-gray-700 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-gray-500" />
-              Jangan tampilkan selama 10 menit
-            </span>
-          </label>
+          {/* Footer Checkbox */}
+          <div className="flex items-center justify-center pt-2 border-t border-gray-100 dark:border-gray-800 mt-2">
+            <label className="flex items-center gap-2 cursor-pointer group select-none">
+              <div className={cn(
+                "w-5 h-5 rounded border flex items-center justify-center transition-colors",
+                dontShowChecked
+                  ? "bg-primary-500 border-primary-500 text-white"
+                  : "bg-transparent border-gray-300 dark:border-gray-600 group-hover:border-primary-400"
+              )}>
+                {dontShowChecked && <X className="w-3 h-3 rotate-45" />} {/* Checkmark simulation if needed, or import Check */}
+              </div>
+              <input
+                type="checkbox"
+                checked={dontShowChecked}
+                onChange={(e) => setDontShowChecked(e.target.checked)}
+                className="hidden"
+              />
+              <span className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">
+                {t('dontShowAgain')}
+              </span>
+            </label>
+          </div>
         </div>
       </div>
     </div>

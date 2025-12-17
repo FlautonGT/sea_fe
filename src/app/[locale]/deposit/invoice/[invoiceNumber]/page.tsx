@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { XCircle, Home, CheckCircle, Wallet, Clock, XOctagon } from 'lucide-react';
@@ -43,7 +43,7 @@ export default function DepositInvoicePage() {
         return data as Deposit;
     };
 
-    const fetchInvoice = async () => {
+    const fetchInvoice = useCallback(async () => {
         if (!token) return;
         try {
             const response = await getDepositInvoice(
@@ -54,7 +54,7 @@ export default function DepositInvoicePage() {
             if (response.error) {
                 setError(response.error.message);
                 // If error, stop loading so we show error state
-                if (isLoading) setIsLoading(false);
+                setIsLoading(false);
             } else if (response.data) {
                 let data = normalizeDeposit(response.data);
 
@@ -65,21 +65,21 @@ export default function DepositInvoicePage() {
 
                 setDeposit(data);
                 // IMPORTANT: Only set loading to false on initial load or success
-                if (isLoading) setIsLoading(false);
+                setIsLoading(false);
             }
         } catch (error) {
             console.error('Failed to fetch invoice:', error);
             setError(language === 'id' ? 'Gagal memuat data invoice' : 'Failed to load invoice');
             setIsLoading(false);
         }
-    };
+    }, [token, invoiceNumber, language]);
 
     useEffect(() => {
         if (invoiceNumber) {
             setIsLoading(true);
             fetchInvoice();
         }
-    }, [invoiceNumber, token, language]);
+    }, [invoiceNumber, token, language, fetchInvoice]);
 
     // Polling for status updates (for pending deposits)
     useEffect(() => {

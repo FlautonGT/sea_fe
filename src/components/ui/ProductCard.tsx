@@ -102,7 +102,7 @@ export default function ProductCard({
     <Link
       href={href}
       className={cn(
-        "product-card block group h-full relative bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300",
+        "product-card block group h-full relative bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-1 transition-all duration-300",
         className
       )}
     >
@@ -111,26 +111,31 @@ export default function ProductCard({
           src={product.thumbnail}
           alt={product.title}
           fill
-          className="object-cover transition-transform duration-500 group-hover:scale-110"
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
         />
-        {/* Overlay on hover - Subtle gloss effect only */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Overlay on hover - Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
         {product.isPopular && (
           <div className="absolute top-2 left-2 z-10">
-            <span className="px-2 py-0.5 bg-orange-500/90 backdrop-blur-sm text-white text-[10px] font-bold rounded-full shadow-sm">
+            <span className="px-2.5 py-1 bg-gradient-to-r from-orange-500 to-red-500 backdrop-blur-md text-white text-[10px] font-bold rounded-full shadow-lg shadow-orange-500/30">
               🔥 Hot
             </span>
           </div>
         )}
       </div>
-      <div className="p-3">
-        <h3 className="font-semibold text-sm text-gray-900 dark:text-white line-clamp-1 group-hover:text-primary-600 transition-colors">
+      <div className="p-4 relative">
+        <h3 className="font-bold text-sm text-gray-900 dark:text-white line-clamp-1 group-hover:text-primary-600 transition-colors">
           {product.title}
         </h3>
-        <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1 font-medium">
           {product.publisher || 'Direct Top Up'}
         </p>
+
+        {/* Shine effect on hover */}
+        <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 transform skew-x-12" />
+        </div>
       </div>
     </Link>
   );

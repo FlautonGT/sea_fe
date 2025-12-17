@@ -11,6 +11,8 @@ import { useLocale, useTranslation } from '@/contexts/LocaleContext';
 import { generateInitials, cn } from '@/lib/utils';
 import CurrencyLanguageModal from '@/components/modals/CurrencyLanguageModal';
 import Logo from '@/components/ui/Logo';
+import { getProducts } from '@/lib/api';
+import { Product } from '@/types';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -24,22 +26,62 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const { t } = useTranslation();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [displayLimit, setDisplayLimit] = useState(5);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+
   const userMenuRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false);
       }
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Debounced Search Effect
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.trim().length >= 2) {
+        setIsSearching(true);
+        setShowResults(true);
+        setDisplayLimit(5); // Reset limit on new search
+        try {
+          // Pass 'search' param to getProducts
+          const response = await getProducts(regionCode, undefined, undefined, searchQuery);
+          if (response.data && Array.isArray(response.data)) {
+            setSearchResults(response.data); // Store all results
+          } else {
+            setSearchResults([]);
+          }
+        } catch (error) {
+          console.error('Search failed:', error);
+          setSearchResults([]);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+        setShowResults(false);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, regionCode]);
 
   // Focus mobile search input when opened
   useEffect(() => {
@@ -51,8 +93,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(getLocalizedPath(`/search?q=${encodeURIComponent(searchQuery)}`));
-      setShowMobileSearch(false);
+      setShowResults(true);
+      // No redirect, just ensure results are shown
     }
   };
 
@@ -85,26 +127,87 @@ export default function Header({ onMenuClick }: HeaderProps) {
             </Link>
 
             {/* Search Bar - Desktop */}
-            <form
-              onSubmit={handleSearch}
-              className="hidden md:flex flex-1 max-w-xl mx-8"
-            >
-              <div className="relative w-full">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t('searchPlaceholder')}
-                  className="w-full pl-4 pr-10 py-2.5 rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  <Search className="w-5 h-5" />
-                </button>
-              </div>
-            </form>
+            <div className="hidden md:flex flex-1 max-w-xl mx-8 relative" ref={searchContainerRef}>
+              <form
+                onSubmit={handleSearch}
+                className="w-full relative"
+              >
+                <div className="relative w-full">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => {
+                      if (searchQuery.length >= 2) setShowResults(true);
+                    }}
+                    placeholder={t('searchPlaceholder')}
+                    className="w-full pl-4 pr-10 py-2.5 rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    {isSearching ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-500 border-t-transparent" />
+                    ) : (
+                      <Search className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </form>
+
+              {/* Live Search Results Dropdown */}
+              {showResults && (searchResults.length > 0 || isSearching) && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto z-[100]">
+                  {searchResults.length > 0 ? (
+                    <div className="py-2">
+                      {searchResults.slice(0, displayLimit).map((product) => (
+                        <Link
+                          key={product.code}
+                          href={getLocalizedPath(`/${product.slug}`)}
+                          onClick={() => {
+                            setShowResults(false);
+                            setSearchQuery('');
+                          }}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b last:border-0 border-gray-50 dark:border-gray-700/50"
+                        >
+                          <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-gray-800">
+                            <Image
+                              src={product.thumbnail}
+                              alt={product.title}
+                              width={40}
+                              height={40}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                              {product.title}
+                            </h4>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                              {product.publisher}
+                            </p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        </Link>
+                      ))}
+                      {searchResults.length > displayLimit && (
+                        <button
+                          onClick={() => setDisplayLimit(prev => prev + 5)}
+                          className="w-full block text-center py-3 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          {t('seeAll')} ({searchResults.length - displayLimit}+)
+                        </button>
+                      )}
+                    </div>
+                  ) : !isSearching && searchQuery.length >= 2 && (
+                    <div className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                      No results found
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Right Section */}
             <div className="flex items-center gap-2 sm:gap-4">
@@ -248,13 +351,16 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
           {/* Mobile Search Bar - Expandable */}
           {showMobileSearch && (
-            <div className="md:hidden pb-3 animate-slide-down">
+            <div className="md:hidden pb-3 animate-slide-down relative">
               <form onSubmit={handleSearch} className="relative">
                 <input
                   ref={mobileSearchRef}
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => {
+                    if (searchQuery.length >= 2) setShowResults(true);
+                  }}
                   placeholder={t('searchPlaceholder')}
                   className="w-full pl-4 pr-20 py-2.5 rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                 />
@@ -263,7 +369,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
                     type="submit"
                     className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   >
-                    <Search className="w-5 h-5" />
+                    {isSearching ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-500 border-t-transparent" />
+                    ) : (
+                      <Search className="w-5 h-5" />
+                    )}
                   </button>
                   <button
                     type="button"
@@ -274,6 +384,59 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   </button>
                 </div>
               </form>
+
+              {/* Mobile Live Search Results Dropdown */}
+              {showResults && (searchResults.length > 0 || isSearching) && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto z-[100]">
+                  {searchResults.length > 0 ? (
+                    <div className="py-2">
+                      {searchResults.slice(0, displayLimit).map((product) => (
+                        <Link
+                          key={product.code}
+                          href={getLocalizedPath(`/${product.slug}`)}
+                          onClick={() => {
+                            setShowResults(false);
+                            setSearchQuery('');
+                            setShowMobileSearch(false);
+                          }}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b last:border-0 border-gray-50 dark:border-gray-700/50"
+                        >
+                          <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-gray-800">
+                            <Image
+                              src={product.thumbnail}
+                              alt={product.title}
+                              width={40}
+                              height={40}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                              {product.title}
+                            </h4>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                              {product.publisher}
+                            </p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        </Link>
+                      ))}
+                      {searchResults.length > displayLimit && (
+                        <button
+                          onClick={() => setDisplayLimit(prev => prev + 5)}
+                          className="w-full block text-center py-3 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          {t('seeAll')} ({searchResults.length - displayLimit}+)
+                        </button>
+                      )}
+                    </div>
+                  ) : !isSearching && searchQuery.length >= 2 && (
+                    <div className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                      No results found
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

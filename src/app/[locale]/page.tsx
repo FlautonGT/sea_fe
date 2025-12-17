@@ -1,11 +1,13 @@
+
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronRight, Zap, Star, TrendingUp } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 import { BannerCarousel, ProductCard, LoadingPage, Popup } from '@/components/ui';
+import { AnimatedZap, AnimatedStar, AnimatedTrending } from '@/components/ui/AnimatedIcons';
 import { useLocale, useTranslation } from '@/contexts/LocaleContext';
 import { Banner, Product, SKU, Category } from '@/types';
 import {
@@ -88,9 +90,14 @@ function PromoSKUCard({ sku }: { sku: SKU }) {
         )}
       </div>
       <div className="p-2">
-        <h3 className="font-medium text-[10px] md:text-xs text-gray-900 dark:text-white line-clamp-1 group-hover:text-primary-600 transition-colors">
+        <h3 className="font-bold text-xs text-gray-900 dark:text-white line-clamp-1 group-hover:text-primary-600 transition-colors">
           {sku.name}
         </h3>
+        {sku.product?.title && (
+          <p className="text-[10px] text-gray-500 dark:text-gray-400 line-clamp-1">
+            {sku.product.title}
+          </p>
+        )}
         <div className="mt-1 flex flex-col">
           <span className="font-bold text-xs text-primary-600 dark:text-primary-400">
             {formatCurrency(sku.price, currency)}
@@ -106,93 +113,78 @@ function PromoSKUCard({ sku }: { sku: SKU }) {
   );
 }
 
-// Favorite Product Card - Compact design
+// Favorite Product Card - Matches Trending Design
 function FavoriteProductCard({ product }: { product: Product }) {
   const { getLocalizedPath } = useLocale();
 
   return (
     <Link
       href={getLocalizedPath(`/${product.slug}`)}
-      className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl p-3 shadow-card hover:shadow-card-hover transition-all"
+      className="group flex flex-row items-center gap-3 bg-white dark:bg-gray-800 rounded-2xl p-3 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-primary-100 dark:hover:border-primary-900 transition-all duration-300 w-full"
     >
-      <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+      <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 shadow-inner">
         <Image
           src={product.thumbnail}
           alt={product.title}
-          width={64}
-          height={64}
-          className="w-full h-full object-cover"
+          width={48}
+          height={48}
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
       </div>
-      <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+      <div className="flex-1 min-w-0 flex flex-col justify-center text-left">
+        <h3 className="font-bold text-sm text-gray-900 dark:text-white truncate w-full group-hover:text-primary-600 transition-colors">
           {product.title}
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-          {product.publisher}
+        <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate mt-0.5 font-medium w-full">
+          {product.publisher || 'Direct Top Up'}
         </p>
+      </div>
+      {/* Arrow - Hidden on mobile, visible on desktop */}
+      <div className="hidden md:flex w-6 h-6 rounded-full bg-gray-50 dark:bg-gray-700 items-center justify-center group-hover:bg-primary-50 dark:group-hover:bg-primary-900/30 transition-colors flex-shrink-0">
+        <ChevronRight className="w-3 h-3 text-gray-400 group-hover:text-primary-600 transition-colors" />
       </div>
     </Link>
   );
 }
 
-// Trending Product Card - Polished List Style
-function TrendingProductCard({ product, rank }: { product: Product; rank: number }) {
+// Trending Product Card - Responsive Grid (Matches Favorites Style)
+function TrendingProductCard({ product }: { product: Product }) {
   const { getLocalizedPath } = useLocale();
-
-  // Rank colors - Updated for better visibility
-  const getRankStyles = (r: number) => {
-    switch (r) {
-      case 1: return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
-      case 2: return 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
-      case 3: return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
-      default: return 'bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-500';
-    }
-  };
 
   return (
     <Link
       href={getLocalizedPath(`/${product.slug}`)}
-      className="group flex items-center gap-4 bg-white dark:bg-gray-800 rounded-2xl p-3 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-primary-100 dark:hover:border-primary-900 transition-all duration-300"
+      className="group flex flex-row items-center gap-3 bg-white dark:bg-gray-800 rounded-2xl p-3 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-primary-100 dark:hover:border-primary-900 transition-all duration-300 w-full"
     >
-      {/* Rank Badge */}
-      <div className={cn(
-        "w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center font-bold text-sm md:text-base flex-shrink-0 transition-transform group-hover:scale-110",
-        getRankStyles(rank)
-      )}>
-        {rank}
-      </div>
-
       {/* Game Thumbnail */}
-      <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
+      <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 shadow-inner">
         <Image
           src={product.thumbnail}
           alt={product.title}
-          width={56}
-          height={56}
+          width={48}
+          height={48}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
       </div>
 
       {/* Game Info */}
-      <div className="flex-1 min-w-0 flex flex-col justify-center">
-        <h3 className="font-bold text-sm md:text-base text-gray-900 dark:text-white truncate group-hover:text-primary-600 transition-colors">
+      <div className="flex-1 min-w-0 flex flex-col justify-center text-left">
+        <h3 className="font-bold text-sm text-gray-900 dark:text-white truncate w-full group-hover:text-primary-600 transition-colors">
           {product.title}
         </h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+        <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate mt-0.5 font-medium w-full">
           {product.publisher || 'Direct Top Up'}
         </p>
       </div>
 
-      {/* Arrow */}
-      <div className="w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center group-hover:bg-primary-50 dark:group-hover:bg-primary-900/30 transition-colors flex-shrink-0">
-        <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-primary-600 transition-colors" />
+      {/* Arrow - Hidden on mobile, visible on desktop to match requested simple look */}
+      <div className="hidden md:flex w-6 h-6 rounded-full bg-gray-50 dark:bg-gray-700 items-center justify-center group-hover:bg-primary-50 dark:group-hover:bg-primary-900/30 transition-colors flex-shrink-0">
+        <ChevronRight className="w-3 h-3 text-gray-400 group-hover:text-primary-600 transition-colors" />
       </div>
     </Link>
   );
 }
 
-// Category Tabs Component - New design
 // Category Tabs Component - Premium Pill Design
 function CategoryTabs({
   categories,
@@ -204,24 +196,26 @@ function CategoryTabs({
   onSelect: (code: string) => void;
 }) {
   return (
-    <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
-      {categories.map((category) => {
-        const isSelected = selectedCategory === category.code;
-        return (
-          <button
-            key={category.code}
-            onClick={() => onSelect(category.code)}
-            className={cn(
-              "flex items-center gap-2 px-5 py-2.5 rounded-full whitespace-nowrap text-sm font-semibold transition-all duration-300",
-              isSelected
-                ? "bg-primary-600 text-white shadow-md shadow-primary-600/25 scale-105"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
-            )}
-          >
-            {category.title}
-          </button>
-        );
-      })}
+    <div className="flex overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
+      <div className="flex gap-2.5 mx-auto md:mx-0">
+        {categories.map((category) => {
+          const isSelected = selectedCategory === category.code;
+          return (
+            <button
+              key={category.code}
+              onClick={() => onSelect(category.code)}
+              className={cn(
+                "flex items-center gap-2 px-5 py-2.5 rounded-full whitespace-nowrap text-sm font-semibold transition-all duration-300",
+                isSelected
+                  ? "bg-primary-600 text-white shadow-md shadow-primary-600/25 scale-105"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+              )}
+            >
+              {category.title}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -280,8 +274,9 @@ export default function HomePage() {
       scrollAmount += scrollSpeed;
       scrollContainer.scrollLeft = scrollAmount;
 
-      // Infinite scroll logic (reset when reaching end)
-      if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth - scrollContainer.clientWidth - 1) {
+      // Infinite scroll logic (seamless loop)
+      // When we scroll past half the content (the first set), reset to 0 instantly
+      if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth / 2) {
         scrollAmount = 0;
         scrollContainer.scrollLeft = 0;
       }
@@ -318,6 +313,9 @@ export default function HomePage() {
               .map(f => productData.find((p: Product) => p.code === f.code))
               .filter(Boolean) as Product[];
             setFavoriteProducts(favProducts);
+          } else if (productsRes.data) {
+            // Fallback: Show first 4 products if no favorites (for design preview)
+            setFavoriteProducts(productsRes.data.slice(0, 4));
           }
         }
         if (categoriesRes.data) {
@@ -355,49 +353,62 @@ export default function HomePage() {
   return (
     <MainLayout>
       <Popup region={regionCode} />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
-        {/* Banner Carousel - Pure image */}
+
+      {/* Decorative Background Mesh */}
+      <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+        <div className="absolute -top-[20%] -right-[10%] w-[70%] h-[70%] rounded-full bg-primary-100/30 dark:bg-primary-900/10 blur-[100px]" />
+        <div className="absolute top-[40%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-100/30 dark:bg-blue-900/10 blur-[100px]" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+        {/* Banner Carousel - Enhanced Container */}
         {banners.length > 0 && (
-          <BannerCarousel banners={banners} />
+          <div className="rounded-3xl overflow-hidden shadow-2xl shadow-primary-900/10 border border-white/20 dark:border-white/5 bg-white dark:bg-gray-800">
+            <BannerCarousel banners={banners} />
+          </div>
         )}
 
-        {/* Promo/Flash Sale Section */}
+        {/* Promo/Flash Sale Section - Redesigned */}
         {promoSKUs.length > 0 && (
           <section
-            className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 p-6 shadow-sm border border-gray-100/50 dark:border-gray-800"
-            onMouseEnter={() => setIsPromoHovered(true)}
-            onMouseLeave={() => setIsPromoHovered(false)}
-            onTouchStart={() => setIsPromoHovered(true)}
-            onTouchEnd={() => setTimeout(() => setIsPromoHovered(false), 3000)}
+            className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 p-8 shadow-lg ring-1 ring-red-100 dark:ring-red-900/30"
           >
             {/* Background Decoration */}
-            <div className="absolute -right-10 -top-10 w-40 h-40 bg-red-500/10 rounded-full blur-3xl group-hover:bg-red-500/20 transition-colors" />
+            <div className="absolute -right-20 -top-20 w-80 h-80 bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-full blur-[60px]" />
 
-            <div className="relative flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-xl">
-                  <span className="text-xl">🔥</span>
+            <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white dark:bg-white/10 rounded-2xl shadow-md shadow-red-500/10">
+                  <AnimatedZap className="w-8 h-8 text-red-500" size={32} />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+                  <h2 className="text-2xl font-black text-gray-900 dark:text-white leading-tight tracking-tight">
                     {t('flashSale')}
                   </h2>
-                  <div className="flex items-center gap-2 mt-1">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('endsIn')}</p>
-                    <div className="bg-red-500 text-white px-2 py-0.5 rounded-lg text-xs font-bold shadow-sm shadow-red-500/30">
-                      {flashSaleEndTime && <CountdownTimer endTime={flashSaleEndTime} />}
-                    </div>
-                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mt-1">
+                    {t('flashSaleTitle')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 bg-white/60 dark:bg-black/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 dark:border-white/10">
+                <p className="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">{t('endsIn')}</p>
+                <div className="text-red-600 dark:text-red-400">
+                  {flashSaleEndTime && <CountdownTimer endTime={flashSaleEndTime} />}
                 </div>
               </div>
             </div>
 
             <div
               ref={promoScrollRef}
-              className="flex gap-4 overflow-x-auto scrollbar-hide py-2 px-1 -mx-1"
+              className="flex gap-4 overflow-x-auto scrollbar-hide py-4 px-2 -mx-2"
+              onMouseEnter={() => setIsPromoHovered(true)}
+              onMouseLeave={() => setIsPromoHovered(false)}
+              onTouchStart={() => setIsPromoHovered(true)}
+              onTouchEnd={() => setTimeout(() => setIsPromoHovered(false), 3000)}
             >
-              {promoSKUs.map((sku) => (
-                <PromoSKUCard key={sku.code} sku={sku} />
+              {[...promoSKUs, ...promoSKUs].map((sku, index) => (
+                <PromoSKUCard key={`${sku.code}-${index}`} sku={sku} />
               ))}
             </div>
           </section>
@@ -405,15 +416,17 @@ export default function HomePage() {
 
         {/* Favorites Section */}
         {favoriteProducts.length > 0 && (
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 px-1">
-              <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+          <section className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded-xl">
+                <AnimatedStar className="w-6 h-6 text-yellow-500" size={24} />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {t('yourFavorites')}
               </h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {favoriteProducts.slice(0, 6).map((product) => (
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
+              {favoriteProducts.slice(0, 4).map((product) => (
                 <FavoriteProductCard key={product.code} product={product} />
               ))}
             </div>
@@ -422,31 +435,29 @@ export default function HomePage() {
 
         {/* Trending Section */}
         {trendingProducts.length > 0 && (
-          <section className="space-y-4">
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-6 h-6 text-orange-500" />
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  {t('trending')}
-                </h2>
+          <section className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-xl">
+                <AnimatedTrending className="w-6 h-6 text-blue-500" size={24} />
               </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {t('trending')}
+              </h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {trendingProducts.slice(0, 8).map((product, index) => (
-                <TrendingProductCard key={product.code} product={product} rank={index + 1} />
+
+            {/* 2-Column Grid on Mobile and Desktop */}
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
+              {trendingProducts.slice(0, 8).map((product) => (
+                <TrendingProductCard key={product.code} product={product} />
               ))}
             </div>
           </section>
         )}
 
-        {/* Voucher & Top Up Section */}
-        <section className="space-y-6 pt-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {t('gameSelection')}
-            </h2>
-
-            {/* Category Tabs - Refined */}
+        {/* Voucher & Top Up Section - Refined Header */}
+        <section className="space-y-8">
+          <div className="flex flex-col gap-6 border-b border-gray-100 dark:border-gray-800 pb-6 items-center md:items-start">
+            {/* Category Tabs */}
             {categories.length > 0 && (
               <CategoryTabs
                 categories={categories}
@@ -456,13 +467,13 @@ export default function HomePage() {
             )}
           </div>
 
-          {/* Products Grid - Increased spacing for premium feel */}
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-5">
+          {/* Products Grid */}
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-10">
             {filteredProducts.slice(0, 12).map((product) => (
               <Link
                 key={product.code}
                 href={getLocalizedPath(`/${product.slug}`)}
-                className="transition-transform duration-300 hover:-translate-y-1 block"
+                className="transition-transform duration-300 hover:-translate-y-1 block h-full"
               >
                 <ProductCard product={product} />
               </Link>
@@ -470,13 +481,13 @@ export default function HomePage() {
           </div>
 
           {filteredProducts.length > 12 && (
-            <div className="mt-8 text-center">
+            <div className="mt-12 text-center">
               <Link
                 href={getLocalizedPath(`/category/${selectedCategory}`)}
-                className="inline-flex items-center gap-2 px-8 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-full font-semibold text-gray-900 dark:text-white transition-all shadow-sm hover:shadow-md"
+                className="group inline-flex items-center gap-3 px-8 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 rounded-full font-bold text-gray-900 dark:text-white transition-all shadow-sm hover:shadow-lg hover:shadow-primary-500/10"
               >
                 {t('seeAllGames')}
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           )}
@@ -486,3 +497,46 @@ export default function HomePage() {
   );
 }
 
+// Additional icons for Trust Section
+function ShieldCheckIcon(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  )
+}
+
+function HeadsetIcon(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 11v3a8 8 0 0 0 16 0v-3" />
+      <path d="M2.5 10a2.5 2.5 0 0 1 5 0v5a2.5 2.5 0 0 1-5 0Z" />
+      <path d="M16.5 10a2.5 2.5 0 0 1 5 0v5a2.5 2.5 0 0 1-5 0Z" />
+      <path d="M12 6a8 8 0 0 0-8 8" />
+      <path d="M12 6a8 8 0 0 1 8 8" />
+    </svg>
+  )
+}

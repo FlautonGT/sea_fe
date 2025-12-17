@@ -25,6 +25,11 @@ import AccountInfoCard from '@/components/payment/AccountInfoCard';
 import TransactionStatusCard from '@/components/payment/TransactionStatusCard';
 import PaymentInstructionCard from '@/components/payment/PaymentInstructionCard';
 import Timeline from '@/components/payment/Timeline'; // Kept as optional legacy/history view if needed at bottom
+import { getReviews, postReview } from '@/lib/api';
+import { Review, ReviewPayload } from '@/types';
+import { ReviewForm } from '@/components/reviews/ReviewForm';
+import { ReviewCard } from '@/components/reviews/ReviewCard';
+import { toast } from 'sonner';
 
 export default function InvoicePage() {
   const params = useParams();
@@ -40,6 +45,10 @@ export default function InvoicePage() {
   const [copied, setCopied] = useState(false);
   const [showAnimation, setShowAnimation] = useState(true);
   const [animationComplete, setAnimationComplete] = useState(false);
+
+  // Review State
+  const [existingReview, setExistingReview] = useState<Review | null>(null);
+  const [isCheckingReview, setIsCheckingReview] = useState(false);
 
   // Helper to check for client-side expiry
   const checkExpiry = (data: Invoice): Invoice => {
@@ -157,6 +166,43 @@ export default function InvoicePage() {
     // Import dynamically or assume imported
     setLastTransactions(getLocalTransactions(regionCode));
   }, [regionCode]);
+
+  // Check for existing review
+  useEffect(() => {
+    async function checkReview() {
+      if (invoice?.status.transactionStatus === 'SUCCESS') {
+        setIsCheckingReview(true);
+        try {
+          const res = await getReviews({ invoiceNumber: invoiceNumber, region: regionCode });
+          if (res.data && res.data.reviews.length > 0) {
+            setExistingReview(res.data.reviews[0]);
+          }
+        } catch (e) {
+          console.error("Failed to check review", e);
+        } finally {
+          setIsCheckingReview(false);
+        }
+      }
+    }
+    if (invoiceNumber && invoice?.status.transactionStatus === 'SUCCESS') {
+      checkReview();
+    }
+  }, [invoice, invoiceNumber, regionCode]);
+
+  const handleReviewSubmit = async (data: ReviewPayload) => {
+    try {
+      const res = await postReview(data);
+      if (res.data) {
+        setExistingReview(res.data);
+        toast.success(language === 'id' ? "Ulasan berhasil dikirim!" : "Review submitted!");
+      } else {
+        toast.error(language === 'id' ? "Gagal mengirim ulasan." : "Failed to submit review.");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error(language === 'id' ? "Gagal mengirim ulasan." : "Failed to submit review.");
+    }
+  };
 
   const handleAnimationComplete = () => {
     setShowAnimation(false);
@@ -306,7 +352,6 @@ export default function InvoicePage() {
                   </motion.div>
                 </div>
 
-                {/* Payment Instructions (Only if Pending) */}
                 {invoice.status.transactionStatus === 'PENDING' && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -319,6 +364,26 @@ export default function InvoicePage() {
                       onCopy={handleCopy}
                       copied={copied}
                     />
+                  </motion.div>
+                )}
+
+                {/* Review Section (Success Only) */}
+                {invoice.status.transactionStatus === 'SUCCESS' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.5 }}
+                  >
+                    {!existingReview ? (
+                      <ReviewForm invoiceNumber={invoiceNumber} onSubmit={handleReviewSubmit} />
+                    ) : (
+                      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                          {language === 'id' ? 'Ulasan Anda' : 'Your Review'}
+                        </h3>
+                        <ReviewCard review={existingReview} />
+                      </div>
+                    )}
                   </motion.div>
                 )}
 

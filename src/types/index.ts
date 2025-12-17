@@ -144,6 +144,7 @@ export interface SKU {
     name: string;
     slug: string;
     thumbnail: string;
+    title: string;
   };
 }
 
@@ -555,3 +556,33 @@ export interface Pagination {
   totalPages: number;
 }
 
+
+// Reviews
+export interface Review {
+  rating: number;
+  comment: string;
+  invoiceNumber: string;
+  fullName: string | null;
+  phoneNumber: string;
+  productName: string;
+  skuName: string;
+  createdAt: string;
+}
+
+export interface ReviewStats {
+  rating: number;
+  totalReviews: string; // e.g., "54.80jt"
+}
+
+export interface ReviewParams {
+  limit?: number;
+  page?: number;
+  region?: string;
+  productCode?: string;
+}
+
+export interface ReviewPayload {
+  rating: number;
+  comment: string;
+  invoiceNumber: string;
+}

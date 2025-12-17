@@ -44,6 +44,11 @@ import {
 } from '@/lib/api';
 import OrderConfirmationModal from '@/components/modals/OrderConfirmationModal';
 import PromoModal from '@/components/modals/PromoModal';
+import { Review, ReviewStats } from '@/types';
+import { getReviews } from '@/lib/api';
+import { ReviewList } from '@/components/reviews/ReviewList';
+import { Star } from 'lucide-react';
+// Metadata logic moved to layout.tsx
 
 // Order Summary Component
 function OrderSummary({
@@ -86,12 +91,12 @@ function OrderSummary({
   const total = subtotal - promoDiscount + paymentFee;
 
   return (
-    <div className="sticky top-24 h-fit">
+    <div className="">
       <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-xl ring-1 ring-black/5">
         {/* Header */}
         <div className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-800/50 px-6 py-4 border-b border-gray-100 dark:border-gray-700">
           <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
-            Ringkasan Pesanan
+            {`${t('orderSummary')}`}
           </h3>
         </div>
 
@@ -279,8 +284,10 @@ function PaymentCategorySection({
 
   if (categoryChannels.length === 0) return null;
 
-  // Mobile: 3, Desktop: 4
-  const previewChannels = categoryChannels.slice(0, 4);
+  // Show featured channels (max 3)
+  const previewChannels = categoryChannels
+    .filter((ch) => ch.featured)
+    .slice(0, 3);
 
   return (
     <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
@@ -293,10 +300,9 @@ function PaymentCategorySection({
         </span>
         <div className="flex items-center gap-2 md:gap-3">
           {!isExpanded && previewChannels.length > 0 && (
-            <div className="flex items-center gap-1">
-              {/* Show only 3 on mobile, 4 on desktop */}
-              {previewChannels.map((ch, idx) => (
-                <div key={ch.code} className={cn("relative h-4 w-auto md:h-5", idx >= 3 && "hidden md:block")}>
+            <div className="flex items-center gap-2 md:gap-3">
+              {previewChannels.map((ch) => (
+                <div key={ch.code} className="relative h-4 w-auto md:h-5">
                   <Image
                     src={ch.image}
                     alt={ch.name}
@@ -487,6 +493,12 @@ export default function ProductDetailPage() {
   const [showRecentAccounts, setShowRecentAccounts] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
+  // Reviews State
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null);
+  const [activeMobileTab, setActiveMobileTab] = useState<'transaction' | 'reviews'>('transaction');
+
+
   // Debug: Monitor modal state changes
   useEffect(() => {
     if (showConfirmModal || orderInquiryData) {
@@ -565,6 +577,31 @@ export default function ProductDetailPage() {
       fetchData();
     }
   }, [slug, regionCode, router, getLocalizedPath, skuParam]);
+
+  // Fetch Reviews
+  useEffect(() => {
+    async function fetchProductReviews() {
+      if (!product) return;
+      try {
+        const res = await getReviews({
+          productCode: product.code, // User wants productCode filter
+          limit: 5, // Show small amount initial
+          page: 1,
+          region: 'ID'
+        });
+        if (res.data) {
+          setReviews(res.data.reviews);
+          setReviewStats(res.data.stats);
+        }
+      } catch (error) {
+        console.error("Failed to fetch reviews", error);
+      }
+    }
+    if (product) {
+      fetchProductReviews();
+    }
+  }, [product]);
+
 
   // Refresh user session on mount (to get latest balance)
   useEffect(() => {
@@ -1149,7 +1186,97 @@ export default function ProductDetailPage() {
     : 0;
   const totalPrice = subtotal - promoDiscount + paymentFee;
 
+  // --- Helper Components ---
+  const MobileTabs = () => (
+    <div className="flex w-full bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30 lg:hidden mt-12">
+      <button
+        onClick={() => setActiveMobileTab('transaction')}
+        className={cn(
+          "flex-1 py-4 text-sm font-semibold text-center transition-colors relative",
+          activeMobileTab === 'transaction'
+            ? "text-primary-600 dark:text-primary-400"
+            : "text-gray-500 dark:text-gray-400"
+        )}
+      >
+        {language === 'id' ? 'Transaksi' : 'Transaction'}
+        {activeMobileTab === 'transaction' && (
+          <motion.div
+            layoutId="activeTab"
+            className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 dark:bg-primary-400"
+          />
+        )}
+      </button>
+      <button
+        onClick={() => setActiveMobileTab('reviews')}
+        className={cn(
+          "flex-1 py-4 text-sm font-semibold text-center transition-colors relative",
+          activeMobileTab === 'reviews'
+            ? "text-primary-600 dark:text-primary-400"
+            : "text-gray-500 dark:text-gray-400"
+        )}
+      >
+        {language === 'id' ? 'Ulasan' : 'Reviews'}
+        {activeMobileTab === 'reviews' && (
+          <motion.div
+            layoutId="activeTab"
+            className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 dark:bg-primary-400"
+          />
+        )}
+      </button>
+    </div>
+  );
+
+  const ReviewsSidebarCard = () => {
+    if (!reviewStats) return null;
+
+    const formatCount = (num: number | string) => {
+      const n = Number(num);
+      if (isNaN(n)) return '0';
+      return new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', {
+        notation: "compact",
+        compactDisplay: "short",
+        maximumFractionDigits: 1
+      }).format(n);
+    };
+
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm mb-6">
+        <div className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-800/50 px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+          <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
+            {t('reviewsAndRating')}
+          </h3>
+        </div>
+        <div className="p-6">
+          <div className="flex items-center gap-4">
+            <span className="text-6xl font-extrabold text-gray-900 dark:text-white tracking-tighter leading-none">
+              {Number(reviewStats.rating).toLocaleString(language === 'id' ? 'id-ID' : 'en-US', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}
+            </span>
+            <div className="flex flex-col gap-1.5 pt-1">
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star
+                    key={s}
+                    className={cn(
+                      "w-5 h-5",
+                      s <= Math.round(Number(reviewStats.rating))
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700"
+                    )}
+                  />
+                ))}
+              </div>
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                {language === 'id' ? 'Berdasarkan total' : 'Based on'} <span className="text-gray-900 dark:text-white font-bold">{formatCount(reviewStats.totalReviews)}</span> rating
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
+
     <MainLayout>
       {/* Banner with Game Info Card */}
       <div className="relative h-48 md:h-80 lg:h-96 w-full">
@@ -1204,18 +1331,23 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
+      {/* Mobile Tabs */}
+      <MobileTabs />
+
+
       <div className="max-w-7xl mx-auto px-4 pt-16 pb-32 lg:pb-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className={cn("lg:col-span-2 space-y-6", activeMobileTab === 'reviews' ? "hidden lg:block" : "block")}>
+
 
             {/* 1. Account Data */}
             <div ref={accountSectionRef}>
               <StepSection
-                title={`${t('accountData')} ${fields.length > 0 ? "*" : ""}`}
+                title={`${t('accountData')}`}
                 number="1"
                 isActive={true}
-                isCompleted={!!accountData}
+                isCompleted={false}
               >
                 {fields.length > 0 ? (
                   <div className="space-y-4">
@@ -1258,7 +1390,7 @@ export default function ProductDetailPage() {
                             required={field.required}
                             maxLength={field.maxLength || undefined}
                             minLength={field.minLength || undefined}
-                            className={index === 0 && recentAccounts.length > 0 ? "border-b-0 rounded-b-none focus:border-b-0 active:border-b-0" : ""}
+                            className={index === 0 && recentAccounts.length > 0 && showRecentAccounts ? "border-b-0 rounded-b-none focus:border-b-0 active:border-b-0" : ""}
                           />
 
                           {/* Recent Accounts Dropdown */}
@@ -1356,10 +1488,10 @@ export default function ProductDetailPage() {
             {/* 2. SKU Selection */}
             <div ref={skuSectionRef}>
               <StepSection
-                title={`${t('selectItem')} *`}
+                title={`${t('selectItem')}`}
                 number="2"
                 isActive={fields.length === 0 || !!accountData}
-                isCompleted={!!selectedSKU}
+                isCompleted={false}
               // Locked removed
               >
                 {/* Overlay removed - Validation moved to selection */}
@@ -1443,43 +1575,44 @@ export default function ProductDetailPage() {
                 title={language === 'id' ? 'Masukkan Jumlah' : 'Enter Quantity'}
                 number="3"
                 isActive={!!selectedSKU}
-                isCompleted={true}
+                isCompleted={false}
               >
                 {/* Quantity Input */}
-                <div className="mb-2">
-                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">
-                    {language === 'id' ? 'Jumlah' : 'Quantity'}
-                  </label>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-800 w-fit">
+                <div className="mb-2 space-y-2">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    {/* Quantity Display */}
+                    <div className="flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl h-9 md:h-10 px-4 flex items-center">
+                      <span className="text-sm font-bold text-gray-900 dark:text-white">
+                        {quantity}
+                      </span>
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setQuantity(Math.min(10, quantity + 1))}
+                        className={cn(
+                          "w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center transition-all active:scale-95",
+                          quantity >= 10
+                            ? "bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed border border-gray-200 dark:border-gray-700"
+                            : "bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-600/20"
+                        )}
+                        disabled={quantity >= 10}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+
                       <button
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="w-10 h-10 flex items-center justify-center bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border-r border-gray-300 dark:border-gray-600"
+                        className={cn(
+                          "w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center transition-all active:scale-95",
+                          quantity <= 1
+                            ? "bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed border border-gray-200 dark:border-gray-700"
+                            : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700"
+                        )}
                         disabled={quantity <= 1}
                       >
-                        <Minus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                      </button>
-                      <input
-                        type="text"
-                        value={quantity}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/[^0-9]/g, '');
-                          let num = parseInt(val);
-                          if (isNaN(num)) num = 0; // Allow clear, but set to 1 on blur if needed or handle logic
-                          setQuantity(num);
-                        }}
-                        onBlur={() => {
-                          if (quantity < 1) setQuantity(1);
-                          if (quantity > 5) setQuantity(5);
-                        }}
-                        className="w-12 h-10 text-center text-sm font-bold text-gray-900 dark:text-white bg-transparent focus:outline-none"
-                      />
-                      <button
-                        onClick={() => setQuantity(Math.min(5, quantity + 1))}
-                        className="w-10 h-10 flex items-center justify-center bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border-l border-gray-300 dark:border-gray-600"
-                        disabled={quantity >= 5}
-                      >
-                        <Plus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                        <Minus className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -1490,10 +1623,10 @@ export default function ProductDetailPage() {
             {/* 4. Payment Methods */}
             <div ref={paymentSectionRef}>
               <StepSection
-                title={`${t('selectPayment')} *`}
+                title={`${t('selectPayment')}`}
                 number="4"
                 isActive={!!selectedSKU}
-                isCompleted={!!selectedPayment}
+                isCompleted={false}
               // Locked removed
               >
 
@@ -1526,34 +1659,20 @@ export default function ProductDetailPage() {
                       if (isBalance) {
                         if (!isLoggedIn) {
                           isDisabled = true;
-                          statusLabel = (
-                            <div className="mt-1 w-full flex justify-end">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 text-xs px-3"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  router.push(getLocalizedPath('/login'));
-                                }}
-                              >
-                                Login
-                              </Button>
-                            </div>
-                          );
+                          statusLabel = null; // Will render button separately for better alignment
                         } else if (user) {
                           // Check balance
                           balanceAmount = user.balance?.[currency as keyof typeof user.balance] || 0;
                           if (balanceAmount < totalWithFee) {
                             isDisabled = true;
                             statusLabel = (
-                              <span className="text-[10px] text-red-500 font-bold mt-1">
+                              <span className="text-sm text-red-500 font-bold text-right">
                                 Saldo Kurang ({formatCurrency(balanceAmount, currency)})
                               </span>
                             );
                           } else {
                             statusLabel = (
-                              <span className="text-[10px] text-green-600 font-medium mt-1">
+                              <span className="text-sm text-green-600 font-medium text-right">
                                 Saldo: {formatCurrency(balanceAmount, currency)}
                               </span>
                             );
@@ -1566,14 +1685,14 @@ export default function ProductDetailPage() {
                         if (amount === 0) {
                           // No SKU selected -> Show Min Amount
                           statusLabel = (
-                            <span className="text-[10px] text-gray-500 font-medium mt-1">
+                            <span className="text-sm text-gray-500 font-medium text-right">
                               Min Rp {channel.minAmount.toLocaleString('id-ID')}
                             </span>
                           );
                         } else if (!isAvailable) {
                           isDisabled = true;
                           statusLabel = (
-                            <span className="text-[10px] text-red-500 font-medium mt-1">
+                            <span className="text-sm text-red-500 font-medium text-right">
                               {totalWithFee < channel.minAmount
                                 ? `Min Rp ${channel.minAmount.toLocaleString('id-ID')}`
                                 : `Max Rp ${channel.maxAmount.toLocaleString('id-ID')}`}
@@ -1582,7 +1701,7 @@ export default function ProductDetailPage() {
                         } else {
                           // Valid and available -> Show Price + Admin Fee
                           statusLabel = (
-                            <span className="text-[10px] text-gray-500 font-medium mt-1">
+                            <span className="text-sm text-gray-500 font-medium text-right">
                               {formatCurrency(Math.round(totalWithFee), currency)}
                             </span>
                           );
@@ -1615,15 +1734,34 @@ export default function ProductDetailPage() {
                             height={32}
                             className={cn("h-8 w-auto object-contain", isDisabled && !(isBalance && !isLoggedIn) && "grayscale")}
                           />
-                          <div className="flex flex-col flex-1">
-                            <span className="font-medium text-gray-900 dark:text-white">
+
+                          <div className="flex flex-1 items-center justify-between gap-3 overflow-hidden">
+                            <span className="font-medium text-gray-900 dark:text-white truncate pb-0.5">
                               {channel.name}
                             </span>
-                            {statusLabel}
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              {statusLabel}
+
+                              {/* Login Button for Balance */}
+                              {isBalance && !isLoggedIn && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 text-xs px-4 bg-primary-50 text-primary-600 border-primary-200 hover:bg-primary-100 hover:border-primary-300 dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-400"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    router.push(getLocalizedPath('/login'));
+                                  }}
+                                >
+                                  {t('login')}
+                                </Button>
+                              )}
+                            </div>
                           </div>
 
                           {isSelected && (
-                            <div className="ml-auto w-5 h-5 bg-primary-500 rounded-full flex items-center justify-center shrink-0">
+                            <div className="ml-3 w-5 h-5 bg-primary-500 rounded-full flex items-center justify-center shrink-0">
                               <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                               </svg>
@@ -1664,10 +1802,10 @@ export default function ProductDetailPage() {
             {/* 5. Contact Info & Promo Code */}
             <div ref={contactSectionRef} className="space-y-6">
               <StepSection
-                title={`${t('contactInfo') || 'Kontak Saya'} *`}
+                title={`${t('contactInfo')}`}
                 number="5"
                 isActive={!!selectedPayment}
-                isCompleted={Boolean(contactInfo.phoneNumber)}
+                isCompleted={false}
                 disabled={false} // Always meaningful to be editable
               >
                 <div className="space-y-4">
@@ -1757,7 +1895,7 @@ export default function ProductDetailPage() {
                 <StepSection
                   title={language === 'id' ? 'Kode Promo' : 'Promo Code'}
                   number="6"
-                  isActive={true}
+                  isActive={Boolean(contactInfo.phoneNumber)}
                   disabled={false}
                 >
                   <div className="space-y-3">
@@ -1814,10 +1952,43 @@ export default function ProductDetailPage() {
                 </StepSection>
               </div>
             </div>
+          </div> {/* This closes the lg:col-span-2 div for main content */}
+
+          {/* Mobile Reviews Tab Content */}
+          <div className={cn("lg:col-span-2 lg:hidden", activeMobileTab === 'reviews' ? "block" : "hidden")}>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+                <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  {t('reviewsAndRating')}
+                </h3>
+                {reviewStats && (
+                  <div className="flex items-center gap-4">
+                    <span className="text-5xl font-extrabold text-gray-900 dark:text-white tracking-tighter leading-none">
+                      {Number(reviewStats.rating).toLocaleString(language === 'id' ? 'id-ID' : 'en-US', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}
+                    </span>
+                    <div className="flex flex-col gap-1 pt-1">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star key={s} className={cn("w-4 h-4", s <= Math.round(Number(reviewStats.rating)) ? "fill-yellow-400 text-yellow-400" : "fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700")} />
+                        ))}
+                      </div>
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        {language === 'id' ? 'Berdasarkan total' : 'Based on'} <span className="text-gray-900 dark:text-white font-bold">{new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { notation: "compact", compactDisplay: "short", maximumFractionDigits: 1 }).format(Number(reviewStats.totalReviews))}</span> rating
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="p-4">
+                <ReviewList reviews={reviews} />
+              </div>
+            </div>
           </div>
 
+
           {/* Order Summary Sidebar */}
-          <div className="hidden lg:block lg:col-span-1">
+          <div className="hidden lg:block lg:col-span-1 sticky top-24 h-fit">
+            <ReviewsSidebarCard />
             <OrderSummary
               product={product}
               sku={selectedSKU}
@@ -1973,7 +2144,8 @@ export default function ProductDetailPage() {
         locale={language}
         onSelectPromo={handleSelectPromo}
       />
-    </MainLayout>
+    </MainLayout >
   );
 }
+
 

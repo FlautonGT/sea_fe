@@ -38,6 +38,7 @@ export const translations: Record<string, Record<string, string>> = {
     safeSecure: 'Aman & Terpercaya',
     latestPromo: 'Promo Terbaru',
     flashSale: 'Flash Sale',
+    flashSaleTitle: 'Harga miring, persediaan terbatas! ⚡',
     endsIn: 'Berakhir dalam',
     yourFavorites: 'Favorit Kamu',
     gameSelection: 'Pilihan Game',
@@ -84,6 +85,7 @@ export const translations: Record<string, Record<string, string>> = {
     promoCode: 'Kode Promo',
     promoCodePlaceholder: 'Masukkan kode promo',
     applyPromo: 'Gunakan',
+    reviewsAndRating: 'Ulasan dan Rating',
     orderSummary: 'Ringkasan Pesanan',
     fillAllFields: 'Lengkapi data terlebih dahulu',
     summaryWillAppear: 'Ringkasan pesanan akan muncul di sini',
@@ -165,6 +167,11 @@ export const translations: Record<string, Record<string, string>> = {
 
     // Popup
     dontShowAgain: 'Jangan tampilkan lagi',
+
+    // SEO
+    homeTitle: 'Seaply - SEA Gaming Supply',
+    homeDescription: 'No #1 supplier top up game & voucher terlaris, murah, aman legal 100% buka 24 Jam dengan channel pembayaran terlengkap se Asia.',
+    productTitleTemplate: 'Top Up {name} Termurah se Asia',
   },
   en: {
     // Navigation
@@ -203,6 +210,7 @@ export const translations: Record<string, Record<string, string>> = {
     safeSecure: 'Safe & Secure',
     latestPromo: 'Latest Promos',
     flashSale: 'Flash Sale',
+    flashSaleTitle: 'Discounted prices, limited stock! ⚡',
     endsIn: 'Ends in',
     yourFavorites: 'Your Favorites',
     gameSelection: 'Game Selection',
@@ -249,6 +257,7 @@ export const translations: Record<string, Record<string, string>> = {
     promoCode: 'Promo Code',
     promoCodePlaceholder: 'Enter promo code',
     applyPromo: 'Apply',
+    reviewsAndRating: 'Reviews and Rating',
     orderSummary: 'Order Summary',
     fillAllFields: 'Please fill all required fields first',
     summaryWillAppear: 'Order summary will appear here',
@@ -330,6 +339,11 @@ export const translations: Record<string, Record<string, string>> = {
 
     // Popup
     dontShowAgain: "Don't show again",
+
+    // SEO
+    homeTitle: 'Seaply - SEA Gaming Supply',
+    homeDescription: '#1 best-selling game & voucher supplier, cheap, safe, 100% legal, open 24 Hours with the most complete payment channels in Asia.',
+    productTitleTemplate: 'Cheapest {name} Top Up in Asia',
   },
 };
 

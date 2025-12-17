@@ -307,3 +307,124 @@ export const AnimatedRefunded = ({ className, size = 48, color = 'currentColor' 
     </motion.svg>
   );
 };
+
+// --- Zap Icon (Flash Sale) ---
+export const AnimatedZap = ({ className, size = 24, color = 'currentColor' }: IconProps) => {
+  return (
+    <motion.svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill={color} // Filled for better impact
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <motion.polygon
+        points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"
+        style={{ transformOrigin: 'center', transformBox: 'fill-box' }}
+        animate={{
+          scale: [1, 1.25, 1],
+          opacity: [1, 0.7, 1],
+          filter: ["drop-shadow(0 0 0px rgba(239, 68, 68, 0))", "drop-shadow(0 0 10px rgba(239, 68, 68, 0.6))", "drop-shadow(0 0 0px rgba(239, 68, 68, 0))"]
+        }}
+        transition={{
+          duration: 1.5, // Slightly faster pulse
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+    </motion.svg>
+  );
+};
+
+// --- Star Icon (Favorites) ---
+export const AnimatedStar = ({ className, size = 24, color = 'currentColor' }: IconProps) => {
+  return (
+    <motion.svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill={color}
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <motion.polygon
+        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+        style={{ transformOrigin: 'center', transformBox: 'fill-box' }}
+        animate={{
+          rotate: [0, 15, -15, 0],
+          scale: [1, 1.2, 1]
+        }}
+        transition={{
+          duration: 2.5, // Slightly faster
+          repeat: Infinity,
+          ease: "easeInOut",
+          repeatDelay: 0.2
+        }}
+      />
+    </motion.svg>
+  );
+};
+
+// --- Trending Icon (Graph) ---
+export const AnimatedTrending = ({ className, size = 24, color = 'currentColor' }: IconProps) => {
+  return (
+    <motion.svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.polyline
+        points="23 6 13.5 15.5 8.5 10.5 1 18"
+        variants={{
+          hidden: { pathLength: 0, opacity: 0 },
+          visible: {
+            pathLength: 1,
+            opacity: 1,
+            transition: {
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+              repeatDelay: 1,
+              repeatType: "reverse"
+            }
+          }
+        }}
+      />
+      <motion.polyline
+        points="17 6 23 6 23 12"
+        variants={{
+          hidden: { pathLength: 0, opacity: 0 },
+          visible: {
+            pathLength: 1,
+            opacity: 1,
+            transition: {
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+              repeatDelay: 1,
+              repeatType: "reverse"
+            }
+          }
+        }}
+      />
+    </motion.svg>
+  );
+};

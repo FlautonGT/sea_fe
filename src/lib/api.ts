@@ -30,6 +30,9 @@ import {
   DepositOverview,
   Pagination,
   AuthToken,
+  Review,
+  ReviewStats,
+  ReviewPayload,
 } from '@/types';
 
 // API Configuration
@@ -170,11 +173,13 @@ export async function getCategories(region: string): Promise<ApiResponse<Categor
 export async function getProducts(
   region: string,
   categoryCode?: string,
-  productCode?: string
+  productCode?: string,
+  search?: string
 ): Promise<ApiResponse<Product[] | Product>> {
   let url = `/products?region=${region}`;
   if (categoryCode) url += `&categoryCode=${categoryCode}`;
   if (productCode) url += `&productCode=${productCode}`;
+  if (search) url += `&search=${encodeURIComponent(search)}`;
   return fetchAPI<Product[] | Product>(url);
 }
 
@@ -658,3 +663,110 @@ export async function createDeposit(
   });
 }
 
+
+// Review Endpoints
+// Review Endpoints
+export async function getReviews(
+  params: {
+    limit?: number;
+    page?: number;
+    region?: string;
+    productCode?: string;
+    invoiceNumber?: string;
+  } = {}
+): Promise<
+  ApiResponse<{
+    stats: ReviewStats;
+    reviews: Review[];
+    pagination: Pagination;
+  }>
+> {
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) searchParams.set(key, String(value));
+  });
+
+  const response = await fetchAPI<any>(`/reviews?${searchParams.toString()}`);
+
+  // ADAPTER: Handle backend returning { data: { data: Review[], overview: ... } } structure
+  const responseData = response.data as any;
+  if (responseData && responseData.overview) {
+    const reviews = responseData.data || [];
+    const overview = responseData.overview;
+
+    // Calculate average rating from breakdown { "1": 0, "2": 0, ... }
+    let totalScore = 0;
+    let totalCount = 0;
+
+    if (overview.rating) {
+      Object.entries(overview.rating).forEach(([star, count]) => {
+        const starNum = Number(star);
+        const countNum = Number(count);
+        if (!isNaN(starNum) && !isNaN(countNum)) {
+          totalScore += starNum * countNum;
+          totalCount += countNum;
+        }
+      });
+    }
+
+    // Use overview.total if available and non-zero, otherwise calculated totalCount
+    const finalTotal = overview.total || totalCount;
+    const avgRating = finalTotal > 0 ? totalScore / finalTotal : 5.0;
+
+    return {
+      ...response,
+      data: {
+        reviews: reviews,
+        stats: {
+          rating: avgRating,
+          totalReviews: finalTotal
+        },
+        pagination: {
+          limit: params.limit || 10,
+          page: params.page || 1,
+          totalRows: finalTotal,
+          totalPages: Math.ceil(finalTotal / (params.limit || 10))
+        }
+      }
+    };
+  }
+
+  // ADAPTER: Handle backend returning { data: Review[] } instead of full structure
+  if (response.data && Array.isArray(response.data)) {
+    const reviews = response.data as Review[];
+
+    // Calculate basic stats from current batch (better than nothing)
+    const avgRating = reviews.length > 0
+      ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
+      : 0;
+
+    return {
+      ...response,
+      data: {
+        reviews: reviews,
+        stats: {
+          rating: avgRating || 5.0, // Default to 5.0 if empty or logic needs it
+          totalReviews: `${reviews.length}` // Temporary
+        },
+        pagination: {
+          limit: params.limit || 10,
+          page: params.page || 1,
+          totalRows: reviews.length, // Can't know true total
+          totalPages: 1
+        }
+      }
+    };
+  }
+
+  // Return as is if it matches expected structure (unlikely based on user report but safe)
+  return response as any;
+}
+
+export async function postReview(
+  data: ReviewPayload
+): Promise<ApiResponse<Review>> {
+  return fetchAPI('/reviews', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}

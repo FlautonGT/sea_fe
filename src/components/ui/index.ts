@@ -8,4 +8,4 @@ export { default as PaymentCategory, PaymentMethodList } from './PaymentMethodCa
 export { default as Logo } from './Logo';
 export { default as Popup } from './Popup';
 export { default as PhoneInput } from './PhoneInput';
-
+export { default as OTPInput } from './OTPInput';

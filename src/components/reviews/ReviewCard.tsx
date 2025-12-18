@@ -13,25 +13,13 @@ export function ReviewCard({ review }: ReviewCardProps) {
         return `${inv.slice(0, 4)}${'*'.repeat(16)}${inv.slice(-4)}`;
     };
 
-    const maskName = (name: string) => {
-        if (!name) return '';
-        if (name.length <= 3) return name;
-        return `${name.slice(0, 3)}${'*'.repeat(name.length - 3)}`;
-    };
-
-    const maskPhone = (phone: string) => {
-        if (!phone) return '';
-        return `*********${phone.slice(-3)}`;
-    };
-
     // If fullName is null, use phoneNumber logic described: only show phone number masked?
     // "jika fullName null maka tampilin phoneNumber"
     // User said: "phoneNumber (gunakan nomor telepon dari transaksi dia, dan tampilkan hanya 3 angka diakhir, contoh *********123"
     // "fullName (jika dia beli auth, tampilin nama dia 3 huruf didepan, jika dia beli guest, cukup null)"
     // The display requirement: "jika fullName null maka tampilin phoneNumber"
 
-    const displayName = review.fullName ? maskName(review.fullName) : maskPhone(review.phoneNumber);
-
+    const displayName = review.fullName ? review.fullName : review.phoneNumber;
     return (
         <div className="bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-xl p-4 space-y-3 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors duration-200">
             <div className="flex items-start justify-between gap-4">

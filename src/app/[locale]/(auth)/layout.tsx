@@ -107,7 +107,7 @@ export default function AuthLayout({
   return (
     <div className="min-h-screen flex bg-gray-50 dark:bg-gray-900">
       {/* Left side - Interactive SEA Map (Desktop) */}
-      <div className="hidden lg:flex lg:w-[45%] relative bg-[#2f7cef] overflow-hidden group">
+      <div className="hidden lg:flex lg:w-[45%] relative bg-[#307ef8] overflow-hidden group">
 
         {/* Animated Map Container */}
         <div
@@ -115,7 +115,7 @@ export default function AuthLayout({
           style={getMapStyle()}
         >
           <Image
-            src="/assets/images/sea_map.png"
+            src="/assets/images/sea_map.jpg"
             alt="Seaply SEA Coverage"
             fill
             className="object-cover"

@@ -168,40 +168,70 @@ export default function PhoneInput({
     fetchRegions();
   }, [defaultCountryCode]);
 
-  // Initialize phone number from value (if it includes country code) - only once
+  // Track previous value to detect external changes
+  const prevValueRef = useRef(value);
+
+  // Sync internal state with value prop
   useEffect(() => {
-    if (value && regions.length > 0 && !isInitialized.current) {
-      // Check if value starts with any phone code
-      let foundRegion = '';
-      let number = value;
+    // If regions not loaded yet, we can't parse efficiently, so wait.
+    if (regions.length === 0) return;
 
-      for (const [regionCode, phoneCode] of Object.entries(REGION_PHONE_CODE)) {
-        if (value.startsWith(phoneCode)) {
-          foundRegion = regionCode;
-          number = value.slice(phoneCode.length);
-          break;
+    const propChanged = value !== prevValueRef.current;
+
+    // We sync if:
+    // 1. The prop has actually changed (external update or parent echo)
+    // 2. OR we haven't initialized yet (first load or waiting for regions)
+    if (propChanged || !isInitialized.current) {
+      prevValueRef.current = value;
+
+      // Construct what our current internal state represents
+      const currentCode = REGION_PHONE_CODE[selectedRegion] || defaultCountryCode;
+      // Use a functional check or rely on closure state? 
+      // Since we don't want to depend on phoneNumber/selectedRegion triggering this effect,
+      // we use the values available in the closure. 
+      // Note: This relies on 'selectedRegion' and 'phoneNumber' being fresh enough.
+      // But since this effect only runs when 'value' or 'regions' changes, 
+      // during high-frequency typing 'value' changes on every stroke (echo),
+      // so we will have fresh closure values.
+      const currentInternalValue = phoneNumber ? `${currentCode}${phoneNumber}` : '';
+
+      // If the incoming value matches what we already have, it's an echo. Do nothing.
+      // This prevents cursor jumping and race conditions.
+      if (value === currentInternalValue && isInitialized.current) return;
+
+      // Mismatch or First Load -> Sync Internal State to Prop
+      if (value) {
+        let foundRegion = '';
+        let numberToParse = value;
+
+        // Try to match start with known region codes
+        for (const [regionCode, phoneCode] of Object.entries(REGION_PHONE_CODE)) {
+          if (value.startsWith(phoneCode)) {
+            foundRegion = regionCode;
+            numberToParse = value.slice(phoneCode.length);
+            break;
+          }
         }
+
+        // If we found a region in the number, switch to it. 
+        // Otherwise keep current default/selected.
+        const regionToUse = foundRegion || selectedRegion;
+
+        if (foundRegion) {
+          setSelectedRegion(foundRegion);
+        }
+
+        const cleanNumber = cleanPhoneInput(numberToParse, regionToUse);
+        setPhoneNumber(cleanNumber);
+        isInitialized.current = true;
+      } else {
+        // Value cleared externally
+        setPhoneNumber('');
+        setDisplayNumber('');
+        // Keep isInitialized true as we are engaging
       }
-
-      // Update region if found
-      if (foundRegion) {
-        setSelectedRegion(foundRegion);
-      }
-
-      // Clean the number: remove leading 0 and any country code
-      const cleanNumber = cleanPhoneInput(number, foundRegion || selectedRegion);
-
-      // Set phone number (clean, no dashes)
-      // Display number will be formatted by useEffect
-      setPhoneNumber(cleanNumber);
-      isInitialized.current = true;
-    } else if (!value && isInitialized.current) {
-      // Clear phone number if value is cleared
-      setPhoneNumber('');
-      setDisplayNumber('');
-      isInitialized.current = false;
     }
-  }, [value, regions]);
+  }, [value, regions]); // Intentionally omit selectedRegion/phoneNumber to avoid typing loops
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -294,8 +324,8 @@ export default function PhoneInput({
       )}
       <div className="relative group" ref={dropdownRef}>
         <div className={`flex rounded-xl bg-gray-50 dark:bg-gray-800/50 border transition-all duration-300 ${error
-            ? 'border-red-500 focus-within:ring-red-100 dark:focus-within:ring-red-900/30 focus-within:border-red-500'
-            : 'border-gray-200 dark:border-gray-700 focus-within:ring-4 focus-within:ring-primary-100 dark:focus-within:ring-primary-900/30 focus-within:border-primary-500'
+          ? 'border-red-500 focus-within:ring-red-100 dark:focus-within:ring-red-900/30 focus-within:border-red-500'
+          : 'border-gray-200 dark:border-gray-700 focus-within:ring-4 focus-within:ring-primary-100 dark:focus-within:ring-primary-900/30 focus-within:border-primary-500'
           }`}>
           {/* Country Code Selector */}
           <div className="relative">
@@ -359,8 +389,8 @@ export default function PhoneInput({
                         handleRegionSelect(region.code);
                       }}
                       className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b last:border-0 border-gray-50 dark:border-gray-700/50 ${selectedRegion === region.code
-                          ? 'bg-blue-50 dark:bg-blue-900/20'
-                          : ''
+                        ? 'bg-blue-50 dark:bg-blue-900/20'
+                        : ''
                         }`}
                     >
                       {region.image && (

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 import { addToFavorites } from '@/lib/favorites';
 import { saveLocalTransaction } from '@/lib/localHistory';
-import { Zap, Clock, Shield, Tag, ChevronDown, ChevronUp, Mail, Minus, Plus, AlertCircle, History } from 'lucide-react';
+import { Zap, Clock, Shield, Tag, ChevronDown, ChevronUp, Mail, Minus, Plus, AlertCircle, History, TicketPercent } from 'lucide-react';
 import { saveRecentAccount, getRecentAccounts, SavedAccount } from '@/lib/recentAccounts';
 import { motion, AnimatePresence } from 'framer-motion';
 import MainLayout from '@/components/layout/MainLayout';
@@ -44,6 +44,7 @@ import {
 } from '@/lib/api';
 import OrderConfirmationModal from '@/components/modals/OrderConfirmationModal';
 import PromoModal from '@/components/modals/PromoModal';
+import LoginModal from '@/components/auth/LoginModal';
 import { Review, ReviewStats } from '@/types';
 import { getReviews } from '@/lib/api';
 import { ReviewList } from '@/components/reviews/ReviewList';
@@ -146,22 +147,6 @@ function OrderSummary({
                 </div>
               </div>
 
-              {/* Error Animation */}
-              {/* Error Alert */}
-              {orderError && (
-                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-xl animate-shake flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-bold text-red-600 dark:text-red-400">
-                      {language === 'id' ? 'Gagal Memproses' : 'Process Failed'}
-                    </p>
-                    <p className="text-sm text-red-600 dark:text-red-400 mt-0.5 leading-tight">
-                      {orderError}
-                    </p>
-                  </div>
-                </div>
-              )}
-
               {/* Details */}
               <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-gray-700">
                 {paymentChannel && (
@@ -190,19 +175,19 @@ function OrderSummary({
                   </>
                 )}
 
-                {promoDiscount > 0 && (
-                  <div className="flex justify-between text-sm text-green-600 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded">
-                    <span className="font-medium">{language === 'id' ? 'Diskon' : 'Discount'}</span>
-                    <span className="font-bold">-{formatCurrency(promoDiscount, currency)}</span>
-                  </div>
-                )}
-
                 {paymentFee > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500 dark:text-gray-400">{language === 'id' ? 'Biaya Admin' : 'Admin Fee'}</span>
                     <span className="font-medium text-gray-900 dark:text-white">
                       {formatCurrency(Math.round(paymentFee), currency)}
                     </span>
+                  </div>
+                )}
+
+                {promoDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded">
+                    <span className="font-medium">{language === 'id' ? 'Diskon' : 'Discount'}</span>
+                    <span className="font-bold">-{formatCurrency(promoDiscount, currency)}</span>
                   </div>
                 )}
               </div>
@@ -224,11 +209,10 @@ function OrderSummary({
           <Button
             onClick={onOrder}
             fullWidth
-            size="lg"
             disabled={!canOrder}
             isLoading={isLoading}
             className={cn(
-              "font-bold shadow-lg shadow-primary-500/20 py-6 transition-all",
+              "h-12 font-bold shadow-lg shadow-primary-500/20 transition-all",
               canOrder
                 ? "hover:shadow-primary-500/40 hover:-translate-y-0.5"
                 : "opacity-50 cursor-not-allowed"
@@ -477,13 +461,15 @@ export default function ProductDetailPage() {
   const [isValidatingPromo, setIsValidatingPromo] = useState(false);
   const [availablePromos, setAvailablePromos] = useState<PromoCode[]>([]);
   const [showPromoModal, setShowPromoModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [isLoadingPromos, setIsLoadingPromos] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isValidating, setIsValidating] = useState(false);
   const [isOrdering, setIsOrdering] = useState(false);
   const [orderError, setOrderError] = useState('');
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  // const [showConfirmModal, setShowConfirmModal] = useState(false); // Removed duplicate
   const [orderInquiryData, setOrderInquiryData] = useState<OrderInquiry | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState(true);
   const [isMobileSummaryExpanded, setIsMobileSummaryExpanded] = useState(false);
@@ -640,13 +626,14 @@ export default function ProductDetailPage() {
   const [createOrderError, setCreateOrderError] = useState(''); // Error specifically for the modal creation step
 
   // Validate account when fields are filled
-  const handleValidateAccount = useCallback(async () => {
+  const handleValidateAccount = useCallback(async (valuesOverride?: Record<string, string>) => {
+    const currentValues = valuesOverride || fieldValues;
     if (!product || fields.length === 0) return;
 
     // Check if all required fields are filled
     const requiredFields = fields.filter((f) => f.required);
     const allFilled = requiredFields.every(
-      (f) => fieldValues[f.key] && fieldValues[f.key].trim() !== ''
+      (f) => currentValues[f.key] && currentValues[f.key].trim() !== ''
     );
 
     if (!allFilled) {
@@ -661,7 +648,7 @@ export default function ProductDetailPage() {
       const response = await validateAccount(
         {
           productCode: product.code,
-          ...fieldValues,
+          ...currentValues,
         },
         token?.accessToken
       );
@@ -714,8 +701,8 @@ export default function ProductDetailPage() {
         setAccountData(null);
       } else if (response.data) {
         setAccountData(response.data);
-        // Auto-scroll to Product
-        setTimeout(() => scrollToSection(skuSectionRef), 100);
+        // Auto-scroll removed as per user request
+        // setTimeout(() => scrollToSection(skuSectionRef), 100);
       }
     } catch (error) {
       console.error('Validation error:', error);
@@ -976,13 +963,23 @@ export default function ProductDetailPage() {
         if (inquiryRes.error.fields) {
           const newFieldErrors: Record<string, string> = {};
 
+          // Get current fields definition
+          const currentFields = fields;
+
           Object.entries(inquiryRes.error.fields).forEach(([key, value]) => {
-            // Map backend field names to frontend state if needed
-            // For now assuming: phoneNumber, email, promoCode map directly
+            let mappedKey = key;
+
+            // Smart mapping for known error keys specific to Game Topup
+            if (key === 'userId' && currentFields.length > 0) {
+              mappedKey = currentFields[0].key;
+            } else if ((key === 'serverId' || key === 'zoneId') && currentFields.length > 1) {
+              mappedKey = currentFields[1].key;
+            }
+            // Map promoCode directly
             if (key === 'promoCode') {
               setPromoError(String(value));
             } else {
-              newFieldErrors[key] = String(value);
+              newFieldErrors[mappedKey] = String(value);
             }
           });
 
@@ -1335,7 +1332,7 @@ export default function ProductDetailPage() {
       <MobileTabs />
 
 
-      <div className="max-w-7xl mx-auto px-4 pt-16 pb-32 lg:pb-6">
+      <div className="max-w-7xl mx-auto px-4 pt-2 lg:pt-16 pb-32 lg:pb-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className={cn("lg:col-span-2 space-y-6", activeMobileTab === 'reviews' ? "hidden lg:block" : "block")}>
@@ -1391,6 +1388,7 @@ export default function ProductDetailPage() {
                             maxLength={field.maxLength || undefined}
                             minLength={field.minLength || undefined}
                             className={index === 0 && recentAccounts.length > 0 && showRecentAccounts ? "border-b-0 rounded-b-none focus:border-b-0 active:border-b-0" : ""}
+                            error={fieldErrors[field.key]}
                           />
 
                           {/* Recent Accounts Dropdown */}
@@ -1423,8 +1421,8 @@ export default function ProductDetailPage() {
 
                                     setFieldValues(newValues);
                                     setShowRecentAccounts(false);
-                                    // Trigger validation manually after a short delay to ensure state update
-                                    setTimeout(() => handleValidateAccount(), 100);
+                                    // Trigger validation immediately with new values
+                                    handleValidateAccount(newValues);
                                   }}
                                   className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b last:border-0 border-gray-100 dark:border-gray-700 group"
                                 >
@@ -1751,7 +1749,7 @@ export default function ProductDetailPage() {
                                   className="h-8 text-xs px-4 bg-primary-50 text-primary-600 border-primary-200 hover:bg-primary-100 hover:border-primary-300 dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-400"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    router.push(getLocalizedPath('/login'));
+                                    setShowLoginModal(true);
                                   }}
                                 >
                                   {t('login')}
@@ -1790,7 +1788,7 @@ export default function ProductDetailPage() {
                       currency={currency}
                       user={user}
                       isLoggedIn={!!user}
-                      onLogin={() => router.push(getLocalizedPath('/login'))}
+                      onLogin={() => setShowLoginModal(true)}
                       locale={language}
                     />
                   ))}
@@ -1854,7 +1852,7 @@ export default function ProductDetailPage() {
                             className="absolute top-full left-0 right-0 mt-2 z-30 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-4"
                           >
                             <Input
-                              label="Email Address"
+                              label={t('emailAddress')}
                               type="email"
                               value={contactInfo.email}
                               className={fieldErrors.email ? "!border-red-500 focus:!ring-red-500" : "bg-gray-50 dark:bg-gray-900/50"}
@@ -1898,56 +1896,90 @@ export default function ProductDetailPage() {
                   isActive={Boolean(contactInfo.phoneNumber)}
                   disabled={false}
                 >
-                  <div className="space-y-3">
-                    <Input
-                      value={promoCode}
-                      onChange={(e) => {
-                        setPromoCode(e.target.value.toUpperCase());
-                        setPromoError('');
-                        setPromoDiscount(0);
-                      }}
-                      placeholder={language === 'id' ? 'Masukkan kode promo' : 'Enter promo code'}
-                      leftIcon={<Tag className="w-5 h-5" />}
-                      className={promoError ? "!border-red-500 focus:!ring-red-500" : ""}
-                    />
-                    {promoError && (
-                      <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-xl animate-shake">
-                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                        <p className="text-sm text-red-600 dark:text-red-400 font-medium leading-tight">
-                          {promoError}
-                        </p>
-                      </div>
-                    )}
-                    {promoDiscount > 0 && (
-                      <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-2 rounded-lg border border-green-200">
-                        <Tag className="w-4 h-4" />
-                        ✓ {language === 'id' ? 'Hemat' : 'Save'} {formatCurrency(promoDiscount, currency)}
-                      </div>
-                    )}
+                  <div className="space-y-4">
                     <div className="flex gap-2">
+                      <div className="relative flex-1 group">
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors">
+                          <TicketPercent className="w-5 h-5" />
+                        </div>
+                        <input
+                          type="text"
+                          value={promoCode}
+                          onChange={(e) => {
+                            setPromoCode(e.target.value.toUpperCase());
+                            setPromoError('');
+                            setPromoDiscount(0);
+                          }}
+                          placeholder={language === 'id' ? 'Masukkan kode promo' : 'Enter promo code'}
+                          className={cn(
+                            "w-full h-12 pl-11 pr-4 bg-gray-50 dark:bg-gray-800 border-2 rounded-xl text-sm font-medium outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600",
+                            promoError
+                              ? "border-red-200 focus:border-red-500 text-red-900 dark:text-red-100"
+                              : "border-gray-200 dark:border-border-700 border-gray-200 dark:border-gray-700 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 text-gray-900 dark:text-white"
+                          )}
+                        />
+                      </div>
                       <Button
-                        variant="outline"
                         onClick={handleValidatePromo}
                         disabled={!promoCode.trim() || isValidatingPromo}
-                        className="flex-1"
+                        isLoading={isValidatingPromo}
+                        className="h-12 px-6 rounded-xl font-bold shadow-lg shadow-primary-500/20 shrink-0"
                       >
-                        {isValidatingPromo ? t('loading') : (language === 'id' ? 'Gunakan' : 'Apply')}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        className="flex-1 text-primary-600 hover:bg-primary-50"
-                        onClick={() => {
-                          if (!canOrder) {
-                            toast.error(language === 'id' ? 'Lengkapi semua data diatas terlebih dahulu!' : 'Please complete all data above first!');
-                            return;
-                          }
-                          setShowPromoModal(true);
-                        }}
-                      >
-                        <Tag className="w-4 h-4 mr-2" />
-                        {language === 'id' ? 'Cari Promo' : 'Find Promo'}
+                        {language === 'id' ? 'Gunakan' : 'Apply'}
                       </Button>
                     </div>
+
+                    {/* Promo Error Feedback */}
+                    {promoError && (
+                      <div className="flex items-start gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 p-3 rounded-xl border border-red-100 dark:border-red-900/20 animate-in slide-in-from-top-1">
+                        <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                        <span className="font-medium">{promoError}</span>
+                      </div>
+                    )}
+
+                    {/* Success Feedback */}
+                    {promoDiscount > 0 && (
+                      <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-900/20 p-3 rounded-xl border border-green-200 dark:border-green-900/30 animate-in slide-in-from-top-1">
+                        <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center shrink-0">
+                          <Tag className="w-3 h-3" />
+                        </div>
+                        <span className="font-bold">
+                          {language === 'id' ? 'Hemat' : 'Save'} {formatCurrency(promoDiscount, currency)}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Find Promo Button */}
+                    <button
+                      onClick={() => {
+                        if (!canOrder) {
+                          toast.error(language === 'id' ? 'Lengkapi semua data diatas terlebih dahulu!' : 'Please complete all data above first!');
+                          return;
+                        }
+                        setShowPromoModal(true);
+                      }}
+                      className="w-full group relative flex items-center justify-between p-3 md:p-4 bg-gradient-to-r from-primary-50 to-blue-50 dark:from-gray-800 dark:to-gray-800/50 rounded-xl border border-primary-100 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700 transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-white dark:bg-gray-700 shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <TicketPercent className="w-5 h-5 text-primary-500" />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-primary-600 transition-colors">
+                            {language === 'id' ? 'Lihat Promo Tersedia' : 'View Available Promos'}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {availablePromos.length > 0
+                              ? (language === 'id' ? `${availablePromos.length} Kupon menunggu dipakai` : `${availablePromos.length} Coupons waiting for you`)
+                              : (language === 'id' ? 'Cek ketersediaan promo' : 'Check promo availability')
+                            }
+                          </p>
+                        </div>
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center border border-gray-100 dark:border-gray-600 group-hover:border-primary-200">
+                        <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-primary-500 -rotate-90" />
+                      </div>
+                    </button>
                   </div>
                 </StepSection>
               </div>
@@ -1987,7 +2019,7 @@ export default function ProductDetailPage() {
 
 
           {/* Order Summary Sidebar */}
-          <div className="hidden lg:block lg:col-span-1 sticky top-24 h-fit">
+          <div className="hidden lg:block lg:col-span-1 sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto custom-scrollbar space-y-4 pb-4">
             <ReviewsSidebarCard />
             <OrderSummary
               product={product}
@@ -2007,7 +2039,7 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Mobile Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden font-sans">
+      <div className="fixed bottom-4 left-4 right-4 z-50 lg:hidden font-sans">
         <AnimatePresence>
           {isMobileSummaryExpanded && (
             <motion.div
@@ -2015,7 +2047,7 @@ export default function ProductDetailPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 500 }}
-              className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-3xl shadow-[0_-8px_30px_rgba(0,0,0,0.12)] border-t border-gray-100 dark:border-gray-700 pb-24 pt-6 px-6"
+              className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700 pb-24 pt-6 px-6"
               onClick={() => setIsMobileSummaryExpanded(false)}
             >
               {/* Drag Handle */}
@@ -2062,9 +2094,9 @@ export default function ProductDetailPage() {
                     </div>
                   )}
                   {promoDiscount > 0 && (
-                    <div className="flex justify-between text-green-600">
-                      <span>Diskon</span>
-                      <span>-{formatCurrency(promoDiscount, currency)}</span>
+                    <div className="flex justify-between text-sm text-green-600 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded">
+                      <span className="font-medium">Diskon</span>
+                      <span className="font-bold">-{formatCurrency(promoDiscount, currency)}</span>
                     </div>
                   )}
                   <div className="flex justify-between pt-3 border-t border-dashed border-gray-200 dark:border-gray-700">
@@ -2080,7 +2112,7 @@ export default function ProductDetailPage() {
         </AnimatePresence>
 
         {/* Always Visible Bar */}
-        <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] relative z-20">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-xl ring-1 ring-gray-200 dark:ring-gray-700 relative z-20">
           <div className="flex items-center gap-4 max-w-7xl mx-auto">
             <button
               onClick={() => setIsMobileSummaryExpanded(!isMobileSummaryExpanded)}
@@ -2143,6 +2175,11 @@ export default function ProductDetailPage() {
         currency={currency}
         locale={language}
         onSelectPromo={handleSelectPromo}
+      />
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
       />
     </MainLayout >
   );

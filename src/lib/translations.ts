@@ -89,6 +89,7 @@ export const translations: Record<string, Record<string, string>> = {
     orderSummary: 'Ringkasan Pesanan',
     fillAllFields: 'Lengkapi data terlebih dahulu',
     summaryWillAppear: 'Ringkasan pesanan akan muncul di sini',
+    emailAddress: 'Alamat Email',
     paymentMethod: 'Metode Pembayaran',
     price: 'Harga',
     voucherDiscount: 'Diskon Voucher',
@@ -171,7 +172,7 @@ export const translations: Record<string, Record<string, string>> = {
     // SEO
     homeTitle: 'Seaply - SEA Gaming Supply',
     homeDescription: 'No #1 supplier top up game & voucher terlaris, murah, aman legal 100% buka 24 Jam dengan channel pembayaran terlengkap se Asia.',
-    productTitleTemplate: 'Top Up {name} Termurah se Asia',
+    productTitleTemplate: 'Top Up {name} Termurah se Asia - Seaply',
   },
   en: {
     // Navigation
@@ -261,6 +262,7 @@ export const translations: Record<string, Record<string, string>> = {
     orderSummary: 'Order Summary',
     fillAllFields: 'Please fill all required fields first',
     summaryWillAppear: 'Order summary will appear here',
+    emailAddress: 'Email Address',
     paymentMethod: 'Payment Method',
     price: 'Price',
     voucherDiscount: 'Voucher Discount',
@@ -343,7 +345,7 @@ export const translations: Record<string, Record<string, string>> = {
     // SEO
     homeTitle: 'Seaply - SEA Gaming Supply',
     homeDescription: '#1 best-selling game & voucher supplier, cheap, safe, 100% legal, open 24 Hours with the most complete payment channels in Asia.',
-    productTitleTemplate: 'Cheapest {name} Top Up in Asia',
+    productTitleTemplate: 'Cheapest {name} Top Up in Asia - Seaply',
   },
 };
 

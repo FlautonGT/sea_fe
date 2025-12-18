@@ -63,7 +63,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
             </div>
 
             <div className="text-sm text-gray-700 dark:text-white/80 leading-relaxed">
-                "{review.comment}"
+                &quot;{review.comment}&quot;
             </div>
 
             <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center gap-2 text-xs text-gray-400 dark:text-white/40 font-mono">

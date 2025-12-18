@@ -231,7 +231,8 @@ export default function PhoneInput({
         // Keep isInitialized true as we are engaging
       }
     }
-  }, [value, regions]); // Intentionally omit selectedRegion/phoneNumber to avoid typing loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, regions, defaultCountryCode]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
